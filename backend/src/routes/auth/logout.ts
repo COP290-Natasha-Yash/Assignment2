@@ -22,15 +22,12 @@ router.post('', async (req: Request, res:Response) => {
     });
 
 
-    if (!user) {
-        res.status(400).json({ error: { message: 'User does not exist.', code: 'ALREADY_LOGGED_OUT' } });
-        return;
-    }
-
-    if (!user.refreshToken) {
+    if (!user || !user.refreshToken) {
         res.status(400).json({ error: { message: 'User is already logged out or does not exist.', code: 'ALREADY_LOGGED_OUT' } });
         return;
     }
+
+    
 
     await prisma.user.update({
         where: {id: userId},
