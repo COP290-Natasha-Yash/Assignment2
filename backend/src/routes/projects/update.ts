@@ -9,14 +9,14 @@ router.patch('/:id', async (req: Request, res: Response) => {
 
     const id = req.params.id as string ;
 
-    const {name, description} = req.body;
-
     const project = await prisma.project.findUnique({where: {id}});
 
     if (!project){
         res.status(404).json({error: {message: 'Project not found', code: 'NOT_FOUND'}});
         return;
     }
+
+    const {name, description} = req.body;
 
     const updated_project = await prisma.project.update({where: {id}, data: {name, description}});
 

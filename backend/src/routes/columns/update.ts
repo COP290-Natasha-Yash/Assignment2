@@ -5,7 +5,7 @@ import { prisma } from '../../prisma';
 const router = express.Router();
 
 
-router.patch('/:id/boards/:boardId', async (req: Request, res: Response) => {
+router.patch('/:id/boards/:boardId/columns/:columnId', async (req: Request, res: Response) => {
 
     const projectId = req.params.id as string ;
 
@@ -25,11 +25,21 @@ router.patch('/:id/boards/:boardId', async (req: Request, res: Response) => {
         return;
     }
 
-    const name = req.body.name;
+    const columnId = req.params.columnId as string;
 
-    const updated_board = await prisma.board.update({where: {id: boardId}, data: {name}});
+    const column = await prisma.column.findUnique({where: {id: columnId}});
 
-    res.status(200).json(updated_board);
+    if (!column){
+        res.status(404).json({error: {message: 'Column not found', code: 'NOT_FOUND'}});
+        return;
+    }
+
+    const {name,order,wipLimit} = req.body;
+
+    const updated_column = await prisma.column.update({where: {id: columnId}, data: {name,order,wipLimit}});
+
+
+    res.status(200).json(updated_column);
 
 
 });
