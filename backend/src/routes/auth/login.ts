@@ -11,7 +11,7 @@ const router = express.Router();
 
 const JWT_SECRET  = process.env.JWT_SECRET || 'supersecret';
 
-router.post('', async (req: Request, res: Response) => {
+router.post('/login', async (req: Request, res: Response) => {
     const {email, password} = req.body;
 
     if (!email || !password){

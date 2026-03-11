@@ -8,7 +8,7 @@ import { prisma } from '../../prisma';
 const router = express.Router();
 
 
-router.post('', async (req: Request, res:Response) => {
+router.post('/logout', async (req: Request, res:Response) => {
     const userId = req.body.id;
 
     if (!userId){
