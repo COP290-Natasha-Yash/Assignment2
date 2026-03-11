@@ -12,7 +12,7 @@ router.patch('/:id/boards/:boardId/columns/:columnId', async (req: Request, res:
     const project = await prisma.project.findUnique({where: {id: projectId}});
 
     if (!project){
-        res.status(404).json({error: {message: 'Project not found', code: 'NOT_FOUND'}});
+        res.status(404).json({error: {message: 'Project Not Found', code: 'NOT_FOUND'}});
         return;
     }
 
@@ -21,7 +21,7 @@ router.patch('/:id/boards/:boardId/columns/:columnId', async (req: Request, res:
     const board = await prisma.board.findUnique({where : {id: boardId}});
 
     if (!board){
-        res.status(404).json({error: {message: 'Board not found', code: 'NOT_FOUND'}});
+        res.status(404).json({error: {message: 'Board Not Found', code: 'NOT_FOUND'}});
         return;
     }
 
@@ -30,14 +30,28 @@ router.patch('/:id/boards/:boardId/columns/:columnId', async (req: Request, res:
     const column = await prisma.column.findUnique({where: {id: columnId}});
 
     if (!column){
-        res.status(404).json({error: {message: 'Column not found', code: 'NOT_FOUND'}});
+        res.status(404).json({error: {message: 'Column Not Found', code: 'NOT_FOUND'}});
         return;
     }
 
     const {name,order,wipLimit} = req.body;
 
-    const updated_column = await prisma.column.update({where: {id: columnId}, data: {name,order,wipLimit}});
+    if (!name){
+        res.status(400).json({error: {message: 'Name is required', code: 'BAD_REQUEST'}});
+        return;
+        }
 
+    if (!order){
+        res.status(400).json({error: {message: 'Order is required', code: 'BAD_REQUEST'}});
+        return;
+    }
+
+    if (typeof order !== 'number'){
+        res.status(400).json({error: {message: 'Invalid Order', code: 'BAD_REQUEST'}});
+        return;
+    }
+
+    const updated_column = await prisma.column.update({where: {id: columnId}, data: {name,order,wipLimit}});
 
     res.status(200).json(updated_column);
 

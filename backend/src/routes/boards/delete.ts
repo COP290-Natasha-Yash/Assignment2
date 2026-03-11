@@ -11,7 +11,7 @@ router.delete('/:id/boards/:boardId', async (req: Request, res: Response) => {
     const project = await prisma.project.findUnique({where: {id :projectId}});
 
     if (!project ){
-        res.status(404).json({error: {message: 'Project not found', code: 'NOT_FOUND'}});
+        res.status(404).json({error: {message: 'Project Not Found', code: 'NOT_FOUND'}});
         return;
     }
 
@@ -20,13 +20,13 @@ router.delete('/:id/boards/:boardId', async (req: Request, res: Response) => {
     const board = await prisma.board.findUnique({where: {id: boardId}});
 
     if (!board){
-        res.status(404).json({error: {message: 'Board not found', code: 'NOT_FOUND'}});
+        res.status(404).json({error: {message: 'Board Not Found', code: 'NOT_FOUND'}});
         return;
     }
 
     await prisma.board.delete({where: {id: boardId}});
 
-    res.status(200).json({message: 'Board deleted successfully'});
+    res.status(200).json({message: 'Board Deleted Successfully'});
 });
 
 

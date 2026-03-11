@@ -11,7 +11,7 @@ router.delete('/:id/boards/:boardId/columns/:columnId', async (req: Request, res
     const project = await prisma.project.findUnique({where: {id :projectId}});
 
     if (!project ){
-        res.status(404).json({error: {message: 'Project not found', code: 'NOT_FOUND'}});
+        res.status(404).json({error: {message: 'Project Not Found', code: 'NOT_FOUND'}});
         return;
     }
 
@@ -20,7 +20,7 @@ router.delete('/:id/boards/:boardId/columns/:columnId', async (req: Request, res
     const board = await prisma.board.findUnique({where: {id: boardId}});
 
     if (!board){
-        res.status(404).json({error: {message: 'Board not found', code: 'NOT_FOUND'}});
+        res.status(404).json({error: {message: 'Board Not Found', code: 'NOT_FOUND'}});
         return;
     }
 
@@ -29,13 +29,13 @@ router.delete('/:id/boards/:boardId/columns/:columnId', async (req: Request, res
     const column = await prisma.column.findUnique({where: {id: columnId}});
 
     if (!column){
-        res.status(404).json({error: {message: 'Column not found', code: 'NOT_FOUND'}});
+        res.status(404).json({error: {message: 'Column Not Found', code: 'NOT_FOUND'}});
         return;
     }
 
     await prisma.column.delete({where: {id: columnId}});
 
-    res.status(200).json({message: 'Column deleted successfully'});
+    res.status(200).json({message: 'Column Deleted Successfully'});
 });
 
 

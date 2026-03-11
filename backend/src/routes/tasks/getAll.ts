@@ -4,7 +4,7 @@ import { prisma } from '../../prisma';
 
 const router = express.Router();
 
-router.get('/:id/boards/:boardId/columns/:columnId', async (req: Request, res: Response) => {
+router.get('/:id/boards/:boardId/columns/:columnId/tasks', async (req: Request, res: Response) => {
 
     const projectId = req.params.id as string;
 
@@ -33,7 +33,9 @@ router.get('/:id/boards/:boardId/columns/:columnId', async (req: Request, res: R
         return;
     }
 
-    res.status(200).json(column);
+    const tasks = await prisma.task.findMany({where: {columnId}});
+
+    res.status(200).json(tasks);
 
 });
 

@@ -9,7 +9,7 @@ router.post('/', async (req: Request, res: Response) => {
     const {name , description} = req.body;
 
     if (!name){
-        res.status(400).json({error: {message: 'Invalid Name', code: 'BAD_REQUEST'}});
+        res.status(400).json({error: {message: 'Name is Required', code: 'BAD_REQUEST'}});
         return;
     }
 

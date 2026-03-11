@@ -11,7 +11,7 @@ router.get('/:id/boards/:boardId/columns', async (req: Request, res: Response) =
     const project = await prisma.project.findUnique({where : {id : projectId}});
 
     if (!project){
-        res.status(404).json({error: {message: 'Project not found', code: 'NOT_FOUND'}});
+        res.status(404).json({error: {message: 'Project Not Found', code: 'NOT_FOUND'}});
         return;
     }
 
@@ -20,7 +20,7 @@ router.get('/:id/boards/:boardId/columns', async (req: Request, res: Response) =
     const board = await prisma.board.findUnique({where : {id: boardId}});
 
     if(!board){
-        res.status(404).json({error: {message: 'Board not found', code: 'NOT_FOUND'}});
+        res.status(404).json({error: {message: 'Board Not Found', code: 'NOT_FOUND'}});
         return;
     }
 

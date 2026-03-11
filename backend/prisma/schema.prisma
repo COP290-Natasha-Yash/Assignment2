@@ -41,6 +41,7 @@ model Board {
   columns           Column[]
 }
 
+
 model Column {
   id                String        @id @default(cuid())
   name              String
@@ -48,6 +49,27 @@ model Column {
   wipLimit          Int?
   boardId           String
   board             Board         @relation(fields: [boardId], references: [id])
+  createdAt         DateTime      @default(now())
+  updatedAt         DateTime      @updatedAt
+  tasks             Task[]
+}
+
+
+model Task {
+  id                String        @id @default(cuid())
+  title             String
+  description       String?
+  status            String        @default("TODO")
+  priority          String        @default("MEDIUM")
+  type              String        @default("TASK")
+  assigneeId        String?
+  reporterId        String
+  dueDate           DateTime?
+  columnId          String
+  column            Column        @relation(fields: [columnId], references: [id])
+  parentId          String?
+  parent            Task?         @relation("SubTasks", fields: [parentId], references: [id])
+  subTasks          Task[]        @relation("SubTasks")
   createdAt         DateTime      @default(now())
   updatedAt         DateTime      @updatedAt
 }

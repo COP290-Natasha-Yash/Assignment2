@@ -4,7 +4,7 @@ import { prisma } from '../../prisma';
 
 const router = express.Router();
 
-router.get('/:id/boards/:boardId/columns/:columnId', async (req: Request, res: Response) => {
+router.get('/:id/boards/:boardId/columns/:columnId/tasks/:taskId', async (req: Request, res: Response) => {
 
     const projectId = req.params.id as string;
 
@@ -33,7 +33,16 @@ router.get('/:id/boards/:boardId/columns/:columnId', async (req: Request, res: R
         return;
     }
 
-    res.status(200).json(column);
+    const taskId = req.params.taskId as string;
+
+    const task = await prisma.task.findUnique({where: {id: taskId}});
+
+    if (!task){
+        res.status(404).json({error: {message: 'Task Not Found', code: 'NOT_FOUND'}});
+        return;
+    }
+
+    res.status(200).json(task);
 
 });
 

@@ -15,13 +15,13 @@ router.post('/register', async (req: Request, res: Response) =>{
     const {name, email, password} = req.body;
 
     if (!name || !email || !password){
-        res.status(400).json({error: {message: 'All fields are required.', code: 'BAD_REQUEST'}});
+        res.status(400).json({error: {message: 'All Fields are Required.', code: 'BAD_REQUEST'}});
         return;
     }
 
     const existing = await prisma.user.findUnique({where: {email}});
     if (existing){
-        res.status(400).json({error: {message: 'Email already in use.', code: 'EMAIL_TAKEN'}});
+        res.status(400).json({error: {message: 'Email Already in Use.', code: 'EMAIL_TAKEN'}});
         return;
     }
 
