@@ -7,18 +7,14 @@ const router = express.Router();
 router.post('/:id/boards/:boardId/columns', async (req: Request, res: Response) => {
 
     const projectId = req.params.id as string;
-
     const project = await prisma.project.findUnique({where : {id: projectId}});
-
     if (!project){
         res.status(404).json({error: {message: 'Project not found', code: 'NOT_FOUND'}});
         return;
     }
 
     const boardId = req.params.boardId as string;
-
     const board = await prisma.board.findUnique({where: {id: boardId}});
-
     if (!board){
         res.status(404).json({error: {message: 'Board Not Found', code: 'NOT_FOUND'}});
         return;
@@ -44,6 +40,7 @@ router.post('/:id/boards/:boardId/columns', async (req: Request, res: Response) 
     
     const column = await prisma.column.create({data : {name,order, wipLimit, boardId}});
 
+    
     res.status(201).json(column);
 
 });

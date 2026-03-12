@@ -17,7 +17,6 @@ declare global {
 export const authenticate = async (req: Request, res: Response, next: NextFunction) => {
 
     const token = req.cookies.token ;
-
     if (!token){
         res.status(401).json({error: {message: 'Token is Required', code: 'UNAUTHORIZED'}});
         return;
