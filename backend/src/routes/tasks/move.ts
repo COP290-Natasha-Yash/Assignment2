@@ -6,6 +6,8 @@ import { auditLog } from '../../utils/auditLog';
 
 import {requireProjectRole}  from '../../middleware/roles';
 
+import { updateStoryStatus } from '../../utils/updateStoryStatus';
+
 
 const router = express.Router();
 
@@ -60,12 +62,16 @@ router.patch('/:id/boards/:boardId/tasks/:taskId/move', requireProjectRole(['ADM
         return;
     }
 
-    const updatedTask = await prisma.task.update({ where: { id: taskId }, data: { columnId: newColumnId } });
+    const updated_task = await prisma.task.update({ where: { id: taskId }, data: { columnId: newColumnId } });
+
+    if (updated_task.parentId) {
+        await updateStoryStatus(updated_task.parentId, req.userId);
+    }
 
     await auditLog(taskId, req.userId!, 'STATUS_CHANGED', task.columnId, newColumnId);
 
     
-    res.status(200).json(updatedTask);
+    res.status(200).json(updated_task);
 
 });
 

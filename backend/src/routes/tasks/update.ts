@@ -8,6 +8,7 @@ import { createNotification } from '../../utils/createNotification';
 
 import {requireProjectRole}  from '../../middleware/roles';
 
+import { updateStoryStatus } from '../../utils/updateStoryStatus';
 
 const router = express.Router();
 
@@ -80,6 +81,9 @@ router.patch('/:id/boards/:boardId/columns/:columnId/tasks/:taskId', requireProj
         }
     }
 
+    if (updated_task.parentId) {
+        await updateStoryStatus(updated_task.parentId, req.userId as string);
+    }
 
     
     res.status(200).json(updated_task);
