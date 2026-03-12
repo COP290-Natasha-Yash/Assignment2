@@ -28,6 +28,7 @@ model Project {
   createdAt         DateTime      @default(now())
   updatedAt         DateTime      @updatedAt
   boards            Board[]
+  members            ProjectMember[]
 }
 
 
@@ -48,7 +49,7 @@ model Column {
   order             Int
   wipLimit          Int?
   boardId           String
-  board             Board         @relation(fields: [boardId], references: [id])
+  board             Board         @relation(fields: [boardId], references: [id], onDelete : Cascade)
   createdAt         DateTime      @default(now())
   updatedAt         DateTime      @updatedAt
   tasks             Task[]
@@ -66,9 +67,9 @@ model Task {
   reporterId        String
   dueDate           DateTime?
   columnId          String
-  column            Column        @relation(fields: [columnId], references: [id])
+  column            Column        @relation(fields: [columnId], references: [id], onDelete: Cascade)
   parentId          String?
-  parent            Task?         @relation("SubTasks", fields: [parentId], references: [id])
+  parent            Task?         @relation("SubTasks", fields: [parentId], references: [id], onDelete: Cascade)
   subTasks          Task[]        @relation("SubTasks")
   createdAt         DateTime      @default(now())
   updatedAt         DateTime      @updatedAt
@@ -78,35 +79,47 @@ model Task {
 
 
 model AuditLog {
-  id        String   @id @default(cuid())
-  taskId    String
-  task      Task     @relation(fields: [taskId], references: [id])
-  userId    String
-  action    String
-  oldValue  String?
-  newValue  String?
-  createdAt DateTime @default(now())
+  id                String        @id @default(cuid())
+  taskId            String
+  task              Task          @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  userId            String
+  action            String
+  oldValue          String?
+  newValue          String?
+  createdAt         DateTime      @default(now())
 }
 
 
 
 model Comment {
-  id        String   @id @default(cuid())
-  content   String
-  taskId    String
-  task      Task     @relation(fields: [taskId], references: [id])
-  authorId  String
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id                String        @id @default(cuid())
+  content           String
+  taskId            String
+  task              Task          @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  authorId          String
+  createdAt         DateTime      @default(now())
+  updatedAt         DateTime      @updatedAt
 }
 
 
 
 model Notification {
+  id                String        @id @default(cuid())
+  userId            String
+  message           String
+  read              Boolean       @default(false)
+  taskId            String
+  createdAt         DateTime      @default(now())
+}
+
+
+
+model ProjectMember {
   id        String   @id @default(cuid())
   userId    String
-  message   String
-  read      Boolean  @default(false)
-  taskId    String
+  projectId String
+  role      String   @default("MEMBER")
+  project   Project  @relation(fields: [projectId], references: [id])
   createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
 }

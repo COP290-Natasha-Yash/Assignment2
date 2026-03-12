@@ -15,8 +15,8 @@ router.patch('/:notificationId', async (req: Request, res:Response) => {
 
     const updated_notification = await prisma.notification.update({where: {id: notificationId}, data: {read: true}});
 
-    res.status(200).json(updated_notification);
 
+    res.status(200).json(updated_notification);
 
 });
 
