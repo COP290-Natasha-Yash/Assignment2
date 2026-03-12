@@ -4,16 +4,20 @@ import projectsRouter from './routes/projects';
 import boardsRouter from './routes/boards';
 import columnsRouter from './routes/columns';
 import tasksRouter from './routes/tasks';
+import cookieParser from 'cookie-parser';
+import { authenticate } from './middleware/auth';
 
 const app = express();
 
 app.use(express.json());
 
+app.use(cookieParser());
+
 app.use('/api/auth', authRouter);
-app.use('/api/projects', projectsRouter);
-app.use('/api/projects', boardsRouter);
-app.use('/api/projects', columnsRouter);
-app.use('/api/projects',tasksRouter);
+app.use('/api/projects', authenticate,projectsRouter);
+app.use('/api/projects', authenticate,boardsRouter);
+app.use('/api/projects', authenticate, columnsRouter);
+app.use('/api/projects',authenticate,tasksRouter);
 
 
 app.listen(3000, () => {

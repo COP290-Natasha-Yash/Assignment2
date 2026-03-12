@@ -30,8 +30,16 @@ router.post('/register', async (req: Request, res: Response) =>{
     const user = await prisma.user.create({data: {name, password: hashpass, email}});
 
     const token = jwt.sign({userId: user.id}, JWT_SECRET, {expiresIn: '15m'});
+    res.cookie('token', token, {httpOnly: true, secure: false, maxAge: 15*60*1000});
 
-    res.status(201).json({token , user : {id: user.id, name: user.name, email: user.email, role: user.role }}) ;
+    const refreshToken = jwt.sign({userId: user.id}, JWT_SECRET, {expiresIn : '1d'});
+    res.cookie('refreshToken', refreshToken, {httpOnly: true, secure: false, maxAge: 24*60*60*1000});
+
+
+    await prisma.user.update({where: {id: user.id}, data: {refreshToken: refreshToken}});
+
+    
+    res.status(201).json({user : {id: user.id, name: user.name, email: user.email, role: user.role }}) ;
 
 });
 

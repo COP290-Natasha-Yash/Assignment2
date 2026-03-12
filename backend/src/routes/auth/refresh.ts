@@ -4,15 +4,13 @@ import jwt from 'jsonwebtoken';
 import { prisma } from '../../prisma';
 
 
-
-
 const router = express.Router();
 
 
 const JWT_SECRET  = process.env.JWT_SECRET || 'supersecret';
 
 router.post('/refresh', async (req:Request, res:Response) => {
-    const refreshToken = req.body.refreshToken;
+    const refreshToken = req.cookies.refreshToken;
 
     if (!refreshToken){
         res.status(400).json({error: {message: 'Refresh Token Required', code: 'BAD_REQUEST'}});
@@ -27,8 +25,10 @@ router.post('/refresh', async (req:Request, res:Response) => {
     }
 
     const accessToken = jwt.sign({userId: user.id}, JWT_SECRET, {expiresIn: '15m'});
+    res.cookie('token', accessToken, {httpOnly: true, secure: false, maxAge: 15*60*1000});
 
-    res.status(200).json({accessToken});
+    
+    res.status(200).json({message: 'Token Refreshed Successfully'});
 
 });
 
