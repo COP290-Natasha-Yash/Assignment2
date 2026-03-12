@@ -10,6 +10,8 @@ import commentsRouter from './routes/comments';
 import notificationsRouter from './routes/notifications';
 import membersRouter from './routes/members';
 import { requireGlobalAdmin, requireProjectRole } from './middleware/roles';
+import usersRouter from './routes/users';
+
 
 const app = express();
 
@@ -26,6 +28,7 @@ app.use('/api/projects',authenticate,tasksRouter);
 app.use('/api/tasks', authenticate, commentsRouter);
 app.use('/api/notifications', authenticate, notificationsRouter);
 app.use('/api/projects', authenticate, membersRouter);
+app.use('/api/users', authenticate, usersRouter);
 
 app.listen(3000, () => {
   console.log('Server running at http://localhost:3000');
