@@ -4,6 +4,8 @@ import { prisma } from '../../prisma';
 
 import { auditLog } from '../../utils/auditLog';
 
+import { createNotification } from '../../utils/createNotification';
+
 const router = express.Router();
 
 router.patch('/:id/boards/:boardId/columns/:columnId/tasks/:taskId', async (req: Request, res: Response) => {
@@ -61,11 +63,20 @@ router.patch('/:id/boards/:boardId/columns/:columnId/tasks/:taskId', async (req:
 
     if (task.status !== updated_task.status) {
         await auditLog(taskId, req.userId!, 'STATUS_CHANGED', task.status, updated_task.status);
+
+        if (updated_task.assigneeId){
+        await createNotification(updated_task.assigneeId , 'Task Status Has Been Updated',taskId);
+        }
     }
 
     if (task.assigneeId !== updated_task.assigneeId){
         await auditLog(taskId,req.userId!, 'ASIGNEE_CHANGED', task.assigneeId ?? 'none', updated_task.assigneeId ?? 'none');
+
+        if (updated_task.assigneeId){
+            await createNotification(updated_task.assigneeId , 'You Have Been Assigned a Task',taskId);
+        }
     }
+
 
     
     res.status(200).json(updated_task);

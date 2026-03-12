@@ -36,7 +36,7 @@ router.patch('/:taskId/comments/:commentId', async (req:Request, res: Response) 
         return;
     }
 
-    await auditLog(taskId, authorId, 'COMMENT_UPDATED', comment.content, updated_comment.content);
+    await auditLog(taskId, authorId, 'COMMENT_EDITED', comment.content, updated_comment.content);
 
     res.status(200).json (updated_comment);
 

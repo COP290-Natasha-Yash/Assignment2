@@ -4,6 +4,8 @@ import {prisma } from '../../prisma';
 
 import { auditLog } from '../../utils/auditLog';
 
+import { createNotification } from '../../utils/createNotification';
+
 const router = express.Router();
 
 router.post('/:taskId/comments', async (req:Request, res: Response) => {
@@ -26,6 +28,10 @@ router.post('/:taskId/comments', async (req:Request, res: Response) => {
     const comment = await prisma.comment.create({data: {content,taskId,authorId}});
 
     await auditLog(taskId, authorId, 'COMMENT_ADDED');
+
+    if (task.assigneeId){
+        await createNotification(task.assigneeId , 'A Comment Was Added To Your Task',taskId);
+    }
 
     res.status(201).json (comment)
 
