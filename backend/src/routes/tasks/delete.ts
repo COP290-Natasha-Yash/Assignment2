@@ -40,17 +40,17 @@ router.delete('/:id/boards/:boardId/columns/:columnId/tasks/:taskId', requirePro
     }
 
     //OPTION- A
-    const subTasks = await prisma.task.findMany({ where: { parentId: taskId } });
-    if (subTasks.length > 0) {
-        res.status(400).json({ error: { message: 'Cannot Delete a Story With Subtasks', code: 'BAD_REQUEST' } });
-        return;
-    }
+//    const subTasks = await prisma.task.findMany({ where: { parentId: taskId } });
+//    if (subTasks.length > 0) {
+//        res.status(400).json({ error: { message: 'Cannot Delete a Story With Subtasks', code: 'BAD_REQUEST' } });
+//        return;
+//    }
 
-    await prisma.task.delete({ where: { id: taskId } });
+//    await prisma.task.delete({ where: { id: taskId } });
 
     //OPTION-B
 //    await prisma.task.deleteMany({ where: { parentId: taskId } });
-//    await prisma.task.delete({ where: { id: taskId } });
+    await prisma.task.delete({ where: { id: taskId } });
 
     await auditLog(taskId, req.userId!, 'TASK_DELETED');
 
