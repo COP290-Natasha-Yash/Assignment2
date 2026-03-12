@@ -8,6 +8,8 @@ import cookieParser from 'cookie-parser';
 import { authenticate } from './middleware/auth';
 import commentsRouter from './routes/comments';
 import notificationsRouter from './routes/notifications';
+import membersRouter from './routes/members';
+import { requireGlobalAdmin, requireProjectRole } from './middleware/roles';
 
 const app = express();
 
@@ -17,13 +19,13 @@ app.use(cookieParser());
 
 
 app.use('/api/auth', authRouter);
-app.use('/api/projects', authenticate,projectsRouter);
+app.use('/api/projects', authenticate, requireGlobalAdmin, projectsRouter);
 app.use('/api/projects', authenticate,boardsRouter);
 app.use('/api/projects', authenticate, columnsRouter);
 app.use('/api/projects',authenticate,tasksRouter);
 app.use('/api/tasks', authenticate, commentsRouter);
 app.use('/api/notifications', authenticate, notificationsRouter);
-
+app.use('/api/projects', authenticate, membersRouter);
 
 app.listen(3000, () => {
   console.log('Server running at http://localhost:3000');

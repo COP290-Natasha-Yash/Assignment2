@@ -7,7 +7,7 @@ import {requireProjectRole}  from '../../middleware/roles';
 
 const router = express.Router();
 
-router.delete('/:id/members/:userId', requireProjectRole(['ADMIN']) ,async (req:Request, res: Response) => {
+router.patch('/:id/members/:userId', requireProjectRole(['ADMIN']), async (req:Request, res: Response) => {
 
     const projectId = req.params.id as string;
     const project = await prisma.project.findUnique({where: {id: projectId}});
@@ -34,10 +34,12 @@ router.delete('/:id/members/:userId', requireProjectRole(['ADMIN']) ,async (req:
         return;
     }
     
-    await prisma.projectMember.delete({where: {id: member.id}});
+    const role = req.body.role;
+
+    const updated_member = await prisma.projectMember.update({where: {id: member.id}, data: {role}});
 
 
-    res.status(200).json({message: 'User Was Successfully Removed'});
+    res.status(200).json(updated_member);
 
 });
 

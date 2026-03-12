@@ -1,10 +1,11 @@
 import express, {Request, Response} from 'express';
 
 import { prisma } from '../../prisma';
+import { requireGlobalAdmin } from '../../middleware/roles';
 
 const router = express.Router();
 
-router.post('/', async (req: Request, res: Response) => {
+router.post('/', requireGlobalAdmin, async (req: Request, res: Response) => {
 
     const {name , description} = req.body;
     if (!name){

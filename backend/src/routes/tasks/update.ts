@@ -6,9 +6,12 @@ import { auditLog } from '../../utils/auditLog';
 
 import { createNotification } from '../../utils/createNotification';
 
+import {requireProjectRole}  from '../../middleware/roles';
+
+
 const router = express.Router();
 
-router.patch('/:id/boards/:boardId/columns/:columnId/tasks/:taskId', async (req: Request, res: Response) => {
+router.patch('/:id/boards/:boardId/columns/:columnId/tasks/:taskId', requireProjectRole(['ADMIN', 'MEMBER']),async (req: Request, res: Response) => {
 
     const projectId = req.params.id as string;
     const project = await prisma.project.findUnique({where : {id : projectId}});

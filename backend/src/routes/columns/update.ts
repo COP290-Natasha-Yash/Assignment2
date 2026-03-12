@@ -2,6 +2,9 @@ import express, {Request, Response} from 'express';
 
 import { prisma } from '../../prisma';
 
+import {requireProjectRole}  from '../../middleware/roles';
+
+
 const router = express.Router();
 
 

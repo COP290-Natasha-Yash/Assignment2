@@ -1,10 +1,12 @@
 import express, {Request, Response} from 'express'
 
+import {requireProjectRole}  from '../../middleware/roles';
+
 import { prisma } from '../../prisma';
 
 const router = express.Router();
 
-router.post('/:id/boards', async (req: Request, res: Response) => {
+router.post('/:id/boards', requireProjectRole(['ADMIN']), async (req: Request, res: Response) => {
 
     const projectId = req.params.id as string;
     const project = await prisma.project.findUnique({where : {id: projectId}});
