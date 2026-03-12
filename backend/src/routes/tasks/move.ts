@@ -65,7 +65,7 @@ router.patch('/:id/boards/:boardId/tasks/:taskId/move', requireProjectRole(['ADM
     const updated_task = await prisma.task.update({ where: { id: taskId }, data: { columnId: newColumnId } });
 
     if (updated_task.parentId) {
-        await updateStoryStatus(updated_task.parentId, req.userId);
+        await updateStoryStatus(updated_task.parentId, req.userId as string);
     }
 
     await auditLog(taskId, req.userId!, 'STATUS_CHANGED', task.columnId, newColumnId);

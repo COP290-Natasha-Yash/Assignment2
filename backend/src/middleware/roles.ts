@@ -27,7 +27,7 @@ export const requireProjectRole = (allowedRoles: string[]) => {
     return async (req:Request, res:Response, next: NextFunction) =>{
 
         const user = await prisma.user.findUnique({where: {id: req.userId}});
-        if (user.globalRole === 'GLOBAL_ADMIN') {
+        if (user?.globalRole === 'GLOBAL_ADMIN') {
             next();
             return;
         }

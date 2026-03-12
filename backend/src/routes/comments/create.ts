@@ -27,6 +27,19 @@ router.post('/:taskId/comments', async (req:Request, res: Response) => {
 
     const comment = await prisma.comment.create({data: {content,taskId,authorId}});
 
+
+    const mentions = content.match(/@(\w+)/g) ;
+    if (mentions) {
+        for (const mention of mentions) {
+            const username = mention.slice(1);
+            const mentionedUser = await prisma.user.findUnique({ where: { username } });
+            if (mentionedUser) {
+                await createNotification(mentionedUser.id, `You Were Mentioned in a Comment`, taskId);
+            }
+        }
+    }
+
+
     await auditLog(taskId, authorId, 'COMMENT_ADDED');
 
     if (task.assigneeId){
