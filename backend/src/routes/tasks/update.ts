@@ -2,6 +2,8 @@ import express, {Request, Response} from 'express'
 
 import { prisma } from '../../prisma';
 
+import { auditLog } from '../../utils/auditLog';
+
 const router = express.Router();
 
 router.patch('/:id/boards/:boardId/columns/:columnId/tasks/:taskId', async (req: Request, res: Response) => {
@@ -65,6 +67,14 @@ router.patch('/:id/boards/:boardId/columns/:columnId/tasks/:taskId', async (req:
     }
 
     const updated_task = await prisma.task.update({where: {id: taskId}, data: {title, description, priority, type, assigneeId, reporterId, dueDate, columnId, parentId }});
+
+    if (task.status !== updated_task.status) {
+        await auditLog(taskId, req.userId!, 'STATUS_CHANGED', task.status, updated_task.status);
+    }
+
+    if (task.assigneeId !== updated_task.assigneeId){
+        await auditLog(taskId,req.userId!, 'ASIGNEE_CHANGED', task.assigneeId ?? 'none', updated_task.assigneeId ?? 'none');
+    }
 
     res.status(200).json(updated_task);
 

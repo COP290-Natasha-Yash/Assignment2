@@ -2,6 +2,8 @@ import express, {Request, Response} from 'express'
 
 import { prisma } from '../../prisma';
 
+import { auditLog } from '../../utils/auditLog';
+
 const router = express.Router();
 
 router.delete('/:id/boards/:boardId/columns/:columnId/tasks/:taskId', async (req: Request, res: Response) => {
@@ -54,6 +56,8 @@ router.delete('/:id/boards/:boardId/columns/:columnId/tasks/:taskId', async (req
     //OPTION-B
 //    await prisma.task.deleteMany({ where: { parentId: taskId } });
 //    await prisma.task.delete({ where: { id: taskId } });
+
+    await auditLog(taskId, req.userId!, 'TASK_DELETED');
 
 
     res.status(200).json({message: 'Task Deleted Successfully'});
