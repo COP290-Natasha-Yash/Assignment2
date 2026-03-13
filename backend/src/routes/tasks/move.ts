@@ -6,7 +6,7 @@ import { auditLog } from '../../utils/auditLog';
 
 import {requireProjectRole}  from '../../middleware/roles';
 
-import { updateStoryStatus } from '../../utils/updateStoryStatus';
+import { getExpectedStoryStatus } from '../../utils/getExpectedStoryStatus'; 
 
 
 const router = express.Router();
@@ -56,6 +56,13 @@ router.patch('/:id/boards/:boardId/tasks/:taskId/move', requireProjectRole(['ADM
         return;
     }
 
+    const currentColumn = await prisma.column.findUnique({where: {id: task.columnId}});
+    if (Math.abs(currentColumn!.order - newColumn.order) !==1){
+        res.status(400).json({ error: { message: 'This Column Transition is Not Allowed. Can Only Move to Adjacent Columns', code: 'INVALID_TRANSITION' } });
+        return;
+    }
+    
+    
     const taskCount = await prisma.task.count({ where: { columnId: newColumnId } });
     if (newColumn.wipLimit && taskCount >= newColumn.wipLimit) {
         res.status(400).json({ error: { message: 'WIP limit reached', code: 'WIP_LIMIT_REACHED' } });
@@ -65,9 +72,20 @@ router.patch('/:id/boards/:boardId/tasks/:taskId/move', requireProjectRole(['ADM
     const updated_task = await prisma.task.update({ where: { id: taskId }, data: { columnId: newColumnId } });
 
     if (updated_task.parentId) {
-        await updateStoryStatus(updated_task.parentId, req.userId as string);
-    }
+        const expectedStatus = await getExpectedStoryStatus(updated_task.parentId);
 
+        if (expectedStatus) {
+            const storyTask = await prisma.task.findUnique({where: {id: updated_task.parentId}});
+            const oldStoryStatus = storyTask!.status;
+
+            await prisma.task.update({where: {id: updated_task.parentId}, data: {status: expectedStatus}});
+
+            if (oldStoryStatus !== expectedStatus) {
+                await auditLog(updated_task.parentId, req.userId!, 'STATUS_CHANGED', oldStoryStatus, expectedStatus);
+            }
+        }
+    }
+    
     await auditLog(taskId, req.userId!, 'STATUS_CHANGED', task.columnId, newColumnId);
 
     

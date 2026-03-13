@@ -8,7 +8,7 @@ import { createNotification } from '../../utils/createNotification';
 
 import {requireProjectRole}  from '../../middleware/roles';
 
-import { updateStoryStatus } from '../../utils/updateStoryStatus';
+import { getExpectedStoryStatus } from '../../utils/getExpectedStoryStatus'; 
 
 const router = express.Router();
 
@@ -42,10 +42,10 @@ router.patch('/:id/boards/:boardId/columns/:columnId/tasks/:taskId', requireProj
         return;
     }
 
-    const {title, description, priority, type, assigneeId, reporterId, dueDate, parentId} = req.body;
+    const {title, description, priority, type,status, assigneeId, reporterId, dueDate, parentId} = req.body;
 
     if (type === 'STORY' && parentId){
-        res.status(400).json({error:{message: 'A "STORY" Cannon Have a Parent', code: 'BAD_REQUEST'}})
+        res.status(400).json({error:{message: 'A "STORY" Cannot Have a Parent', code: 'BAD_REQUEST'}})
         return;
     }
 
@@ -59,6 +59,15 @@ router.patch('/:id/boards/:boardId/columns/:columnId/tasks/:taskId', requireProj
 
         if (parent.type !== 'STORY'){
             res.status(400).json({error:{message: 'Parent task must be a Story', code: 'BAD_REQUEST'}})
+            return;
+        }
+    }
+
+    if (status && task.type === 'STORY') {
+        const expectedStatus = await getExpectedStoryStatus(taskId);
+
+        if (expectedStatus && status !== expectedStatus) {
+            res.status(400).json({ error: { message: 'Story status is inconsistent with children', code: 'INVALID_STATUS' } });
             return;
         }
     }
@@ -79,10 +88,21 @@ router.patch('/:id/boards/:boardId/columns/:columnId/tasks/:taskId', requireProj
         if (updated_task.assigneeId){
             await createNotification(updated_task.assigneeId , 'You Have Been Assigned a Task',taskId);
         }
-    }
+    } 
 
     if (updated_task.parentId) {
-        await updateStoryStatus(updated_task.parentId, req.userId as string);
+        const expectedStatus = await getExpectedStoryStatus(updated_task.parentId);
+
+        if (expectedStatus) {
+            const storyTask = await prisma.task.findUnique({where: {id: updated_task.parentId}});
+            const oldStoryStatus = storyTask!.status;
+
+            await prisma.task.update({where: {id: updated_task.parentId}, data: {status: expectedStatus}});
+
+            if (oldStoryStatus !== expectedStatus) {
+                await auditLog(updated_task.parentId, req.userId!, 'STATUS_CHANGED', oldStoryStatus, expectedStatus);
+            }
+        }
     }
 
     
