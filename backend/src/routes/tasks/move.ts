@@ -57,7 +57,7 @@ router.patch('/:id/boards/:boardId/tasks/:taskId/move', requireProjectRole(['ADM
     }
 
     const currentColumn = await prisma.column.findUnique({where: {id: task.columnId}});
-    if (Math.abs(currentColumn!.order - newColumn.order) !==1){
+    if (Math.abs(currentColumn!.order - newColumn.order) !==1 && currentColumn!.name!=='CLOSED' && newColumn.name!=='CLOSED'){
         res.status(400).json({ error: { message: 'This Column Transition is Not Allowed. Can Only Move to Adjacent Columns', code: 'INVALID_TRANSITION' } });
         return;
     }
@@ -67,6 +67,10 @@ router.patch('/:id/boards/:boardId/tasks/:taskId/move', requireProjectRole(['ADM
     if (newColumn.wipLimit && taskCount >= newColumn.wipLimit) {
         res.status(400).json({ error: { message: 'WIP limit reached', code: 'WIP_LIMIT_REACHED' } });
         return;
+    }
+
+    if (newColumn.name === 'DONE') {
+        await prisma.task.update({where: {id: taskId}, data: {resolvedAt: new Date()}});
     }
 
     const updated_task = await prisma.task.update({ where: { id: taskId }, data: { columnId: newColumnId } });
@@ -86,7 +90,7 @@ router.patch('/:id/boards/:boardId/tasks/:taskId/move', requireProjectRole(['ADM
         }
     }
     
-    await auditLog(taskId, req.userId!, 'STATUS_CHANGED', task.columnId, newColumnId);
+    await auditLog(taskId, req.userId!, 'STATUS_CHANGED', currentColumn!.name, newColumn.name);
 
     
     res.status(200).json(updated_task);

@@ -30,7 +30,7 @@ router.delete('/:taskId/comments/:commentId', async (req:Request, res: Response)
 
     await prisma.comment.delete({where: {id: commentId}});
 
-    await auditLog(taskId, authorId, 'COMMENT_DELETED');
+    await auditLog(taskId, authorId, 'COMMENT_DELETED', comment.content, undefined);
 
     res.status(200).json ({message: 'Comment Deleted Successfully'});
 

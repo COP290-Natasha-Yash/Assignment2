@@ -77,6 +77,8 @@ model Task {
   updatedAt         DateTime      @updatedAt
   auditLogs         AuditLog[]
   comments          Comment[]
+  resolvedAt        DateTime?
+  closedAt          DateTime?
 }
 
 

@@ -34,16 +34,16 @@ router.post('/:taskId/comments', async (req:Request, res: Response) => {
             const username = mention.slice(1);
             const mentionedUser = await prisma.user.findUnique({ where: { username } });
             if (mentionedUser) {
-                await createNotification(mentionedUser.id, `You Were Mentioned in a Comment`, taskId);
+                await createNotification(mentionedUser.id, `You Were Mentioned in a Comment: "${content}"`, taskId);
             }
         }
     }
 
 
-    await auditLog(taskId, authorId, 'COMMENT_ADDED');
+    await auditLog(taskId, authorId, 'COMMENT_ADDED',undefined, content);
 
     if (task.assigneeId){
-        await createNotification(task.assigneeId , 'A Comment Was Added To Your Task',taskId);
+        await createNotification(task.assigneeId , `New Comment on Your task: "${content}"`,taskId);
     }
 
     res.status(201).json (comment)

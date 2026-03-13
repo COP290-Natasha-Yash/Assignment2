@@ -4,6 +4,8 @@ import {prisma } from '../../prisma';
 
 import { auditLog } from '../../utils/auditLog';
 
+import { createNotification } from '../../utils/createNotification';
+
 const router = express.Router();
 
 router.patch('/:taskId/comments/:commentId', async (req:Request, res: Response) => {
@@ -28,13 +30,25 @@ router.patch('/:taskId/comments/:commentId', async (req:Request, res: Response) 
         return;
     }
 
-    const updated_comment = await prisma.comment.update({where: {id: commentId}, data: {content}})
-
     const authorId = req.userId as string;
     if (comment.authorId !== req.userId) {
         res.status(403).json({ error: { message: 'You Can Only Edit Your Own Comments', code: 'FORBIDDEN' } });
         return;
     }
+
+    const mentions = content.match(/@(\w+)/g) ;
+    if (mentions) {
+        for (const mention of mentions) {
+            const username = mention.slice(1);
+            const mentionedUser = await prisma.user.findUnique({ where: { username } });
+            if (mentionedUser) {
+                await createNotification(mentionedUser.id, `You Were Mentioned in a Comment: "${content}"`, taskId);
+            }
+        }
+    }
+
+    const updated_comment = await prisma.comment.update({where: {id: commentId}, data: {content}})
+
 
     await auditLog(taskId, authorId, 'COMMENT_EDITED', comment.content, updated_comment.content);
 

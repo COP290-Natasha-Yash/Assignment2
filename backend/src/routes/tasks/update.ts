@@ -58,21 +58,65 @@ router.patch('/:id/boards/:boardId/columns/:columnId/tasks/:taskId', requireProj
         }
 
         if (parent.type !== 'STORY'){
-            res.status(400).json({error:{message: 'Parent task must be a Story', code: 'BAD_REQUEST'}})
+            res.status(400).json({error:{message: 'Parent Task Must be a Story', code: 'BAD_REQUEST'}})
             return;
         }
     }
 
-    if (status && task.type === 'STORY') {
-        const expectedStatus = await getExpectedStoryStatus(taskId);
 
-        if (expectedStatus && status !== expectedStatus) {
-            res.status(400).json({ error: { message: 'Story status is inconsistent with children', code: 'INVALID_STATUS' } });
+    const updatedData: {
+        title?: string;
+        description?: string;
+        priority?: string;
+        type?: string;
+        status?: string;
+        assigneeId?: string;
+        reporterId?: string;
+        dueDate?: Date;
+        columnId?: string;
+        parentId?: string;
+        resolvedAt?: Date;
+        closedAt?: Date;
+                            } = {title, description, priority, type,status, assigneeId, reporterId, dueDate,  parentId};
+
+
+    if (status === 'CLOSED') {
+        updatedData.closedAt = new Date();
+    }
+    if (status ) {
+        const newColumn = await prisma.column.findFirst({where: {boardId, name:status}});
+        if (newColumn){
+            const taskCount = await prisma.task.count({ where: { columnId: newColumn.id } });
+            if (newColumn.wipLimit && taskCount >= newColumn.wipLimit) {
+                res.status(400).json({ error: { message: 'WIP limit reached', code: 'WIP_LIMIT_REACHED' } });
+                return;
+            }
+
+            if (Math.abs(column!.order - newColumn.order) !==1  && column.name!=='CLOSED' && newColumn.name!=='CLOSED'){
+                res.status(400).json({ error: { message: 'This Column Transition is Not Allowed. Can Only Move to Adjacent Columns', code: 'INVALID_TRANSITION' } });
+                return;
+            }
+            updatedData.columnId = newColumn.id;
+        }
+        else{
+            res.status(404).json({error: {message: 'Column Not Found', code: 'NOT_FOUND'}});
             return;
+        }
+
+        if (task.type === 'STORY'){
+            const expectedStatus = await getExpectedStoryStatus(taskId);
+            if (expectedStatus && status !== expectedStatus) {
+                res.status(400).json({ error: { message: 'Story status is inconsistent with children', code: 'INVALID_STATUS' } });
+                return;
+            }
         }
     }
 
-    const updated_task = await prisma.task.update({where: {id: taskId}, data: {title, description, priority, type, assigneeId, reporterId, dueDate, columnId, parentId }});
+    if (status === 'DONE') {
+        updatedData.resolvedAt = new Date();
+    }
+   
+    const updated_task = await prisma.task.update({where: {id: taskId}, data: updatedData});
 
     if (task.status !== updated_task.status) {
         await auditLog(taskId, req.userId!, 'STATUS_CHANGED', task.status, updated_task.status);
@@ -105,7 +149,7 @@ router.patch('/:id/boards/:boardId/columns/:columnId/tasks/:taskId', requireProj
         }
     }
 
-    
+
     res.status(200).json(updated_task);
 
 });
