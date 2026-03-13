@@ -30,6 +30,4 @@ app.use('/api/notifications', authenticate, notificationsRouter);
 app.use('/api/projects', authenticate, membersRouter);
 app.use('/api/users', authenticate, usersRouter);
 
-app.listen(3000, () => {
-  console.log('Server running at http://localhost:3000');
-});
+export default app;
