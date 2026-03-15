@@ -7,7 +7,7 @@ import registerRouter from './register';
 
 const router = express.Router();
 
-router.use( loginRouter);
+router.use(loginRouter);
 router.use(logoutRouter);
 router.use(refreshRouter);
 router.use(registerRouter);

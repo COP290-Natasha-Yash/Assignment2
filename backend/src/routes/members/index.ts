@@ -10,5 +10,4 @@ router.use(addRouter);
 router.use(removeRouter);
 router.use(updateRoleRouter);
 
-
 export default router;

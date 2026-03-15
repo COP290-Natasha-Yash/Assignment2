@@ -1,35 +1,45 @@
-import express, {Request, Response} from 'express';
+import express, { Request, Response } from 'express';
 
 import jwt from 'jsonwebtoken';
 import { prisma } from '../../prisma';
 
-
 const router = express.Router();
 
+const JWT_SECRET = process.env.JWT_SECRET || 'supersecret';
 
-const JWT_SECRET  = process.env.JWT_SECRET || 'supersecret';
+router.post('/refresh', async (req: Request, res: Response) => {
+  const refreshToken = req.cookies.refreshToken;
 
-router.post('/refresh', async (req:Request, res:Response) => {
-    const refreshToken = req.cookies.refreshToken;
+  if (!refreshToken) {
+    res
+      .status(400)
+      .json({
+        error: { message: 'Refresh Token Required', code: 'BAD_REQUEST' },
+      });
+    return;
+  }
 
-    if (!refreshToken){
-        res.status(400).json({error: {message: 'Refresh Token Required', code: 'BAD_REQUEST'}});
-        return;
-    }
+  const user = await prisma.user.findUnique({ where: { refreshToken } });
 
-    const user = await prisma.user.findUnique({where: {refreshToken}});
+  if (!user) {
+    res
+      .status(401)
+      .json({
+        error: { message: 'Invalid Refresh Token', code: 'UNAUTHORIZED' },
+      });
+    return;
+  }
 
-    if (!user){
-        res.status(401).json({error: {message: 'Invalid Refresh Token', code: 'UNAUTHORIZED'}});
-        return;
-    }
+  const accessToken = jwt.sign({ userId: user.id }, JWT_SECRET, {
+    expiresIn: '15m',
+  });
+  res.cookie('token', accessToken, {
+    httpOnly: true,
+    secure: false,
+    maxAge: 15 * 60 * 1000,
+  });
 
-    const accessToken = jwt.sign({userId: user.id}, JWT_SECRET, {expiresIn: '15m'});
-    res.cookie('token', accessToken, {httpOnly: true, secure: false, maxAge: 15*60*1000});
-
-    
-    res.status(200).json({message: 'Token Refreshed Successfully'});
-
+  res.status(200).json({ message: 'Token Refreshed Successfully' });
 });
 
 export default router;
