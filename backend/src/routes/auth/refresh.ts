@@ -17,6 +17,14 @@ router.post('/refresh', async (req: Request, res: Response) => {
     return;
   }
 
+  try {
+    jwt.verify(refreshToken, JWT_SECRET);
+  } catch {
+    res.status(401).json({
+      error: { message: 'Invalid Refresh Token', code: 'UNAUTHORIZED' },
+    });
+    return;
+  }
   const user = await prisma.user.findUnique({ where: { refreshToken } });
 
   if (!user) {

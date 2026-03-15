@@ -1,9 +1,7 @@
 import request from 'supertest';
 import app from '../../index';
 
-
 describe('POST /api/auth/login', () => {
-
   it('should login successfully with email', async () => {
     const response = await request(app)
       .post('/api/auth/login')
@@ -36,7 +34,7 @@ describe('POST /api/auth/login', () => {
 
     expect(response.status).toBe(400);
     expect(response.body.error.code).toBe('BAD_REQUEST');
-  });  
+  });
 
   it('should fail with wrong password', async () => {
     const response = await request(app).post('/api/auth/login').send({
@@ -74,6 +72,39 @@ describe('POST /api/auth/login', () => {
       username: '_projectviewer_',
     });
 
-    expect(response.headers['set-cookie']).toBeDefined;
+    expect(response.headers['set-cookie']).toHaveLength(2);
+  });
+
+  it('should return correct user fields', async () => {
+    const response = await request(app).post('/api/auth/login').send({
+      email: 'yash@test.com',
+      password: 'yash123',
+    });
+
+    expect(response.body.user).toBeDefined();
+    expect(response.body.user.id).toBeDefined();
+    expect(response.body.user.email).toBe('yash@test.com');
+    expect(response.body.user.password).toBeUndefined();
+  });
+
+  it('should login with both email and username provided', async () => {
+    const response = await request(app).post('/api/auth/login').send({
+      email: 'yash@test.com',
+      username: '_yash_',
+      password: 'yash123',
+    });
+
+    expect(response.status).toBe(200);
+  });
+
+  it('should fail with object as password', async () => {
+    const response = await request(app)
+      .post('/api/auth/login')
+      .send({
+        email: 'yash@test.com',
+        password: { $gt: '' },
+      });
+
+    expect(response.status).toBe(400);
   });
 });

@@ -7,8 +7,6 @@ beforeAll(async () => {
   await seedTestDb();
 });
 
-
-
 describe('POST /api/auth/register', () => {
   it('should fail if fields(here:name) is missing', async () => {
     const response = await request(app).post('/api/auth/register').send({
@@ -53,7 +51,7 @@ describe('POST /api/auth/register', () => {
       name: 'Yash',
       email: 'yash@test.com',
       password: 'yash123',
-      username: '_yash_'
+      username: '_yash_',
     });
 
     expect(response.status).toBe(201);
@@ -64,7 +62,7 @@ describe('POST /api/auth/register', () => {
       name: 'Yash 2',
       email: 'yash@test.com',
       password: 'yash123',
-      username: '_yash_2'
+      username: '_yash_2',
     });
 
     expect(response.status).toBe(400);
@@ -125,5 +123,57 @@ describe('POST /api/auth/register', () => {
     });
 
     expect(response.status).toBe(201);
+  });
+
+  it('should set cookies on register', async () => {
+    const response = await request(app).post('/api/auth/register').send({
+      name: 'Cookie Test',
+      email: 'cookie@test.com',
+      password: 'cookie123',
+      username: '_cookie_',
+    });
+
+    expect(response.headers['set-cookie']).toHaveLength(2);
+  });
+
+  it('should return correct user fields', async () => {
+    const response = await request(app).post('/api/auth/register').send({
+      name: 'Field Test',
+      email: 'fields@test.com',
+      password: 'fields123',
+      username: '_fields_',
+    });
+
+    expect(response.body.user).toBeDefined();
+    expect(response.body.user.id).toBeDefined();
+    expect(response.body.user.name).toBe('Field Test');
+    expect(response.body.user.globalRole).toBeDefined();
+    expect(response.body.user.email).toBe('fields@test.com');
+    expect(response.body.user.globalRole).toBeDefined();
+    expect(response.body.user.password).toBeUndefined();
+  });
+
+  it('should fail with empty string name', async () => {
+    const response = await request(app).post('/api/auth/register').send({
+      name: '',
+      email: 'empty@test.com',
+      password: 'empty123',
+      username: '_empty_',
+    });
+
+    expect(response.status).toBe(400);
+  });
+
+  it('should fail with object as password', async () => {
+    const response = await request(app)
+      .post('/api/auth/register')
+      .send({
+        name: 'Test',
+        email: 'object@test.com',
+        password: { $gt: '' },
+        username: '_object_',
+      });
+
+    expect(response.status).toBe(400);
   });
 });

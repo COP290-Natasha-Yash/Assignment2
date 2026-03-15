@@ -10,7 +10,14 @@ const JWT_SECRET = process.env.JWT_SECRET || 'supersecret';
 router.post('/login', async (req: Request, res: Response) => {
   const { email, username, password } = req.body;
 
-  if ((!email && !username) || !password) {
+  if (typeof password !== 'string') {
+    res.status(400).json({
+      error: { message: 'Invalid Password Format', code: 'BAD_REQUEST' },
+    });
+    return;
+  }
+
+  if ((!email?.trim() && !username?.trim()) || !password?.trim()) {
     res.status(400).json({
       error: { message: 'All Fields are Required.', code: 'BAD_REQUEST' },
     });

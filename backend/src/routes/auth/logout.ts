@@ -2,26 +2,28 @@ import express, { Request, Response } from 'express';
 
 import { prisma } from '../../prisma';
 
+import { authenticate } from '../../middleware/auth';
+
 const router = express.Router();
 
-router.post('/logout', async (req: Request, res: Response) => {
-  const userId = req.body.id;
-
-  if (!userId) {
-    res
-      .status(400)
-      .json({ error: { message: 'User ID Required', code: 'BAD_REQUEST' } });
-    return;
-  }
+router.post('/logout', authenticate, async (req: Request, res: Response) => {
+  const userId = req.userId;
 
   const user = await prisma.user.findUnique({
     where: { id: userId },
   });
 
-  if (!user || !user.refreshToken) {
+  if (!user) {
+    res.status(404).json({
+      error: { message: 'User Not Found', code: 'NOT_FOUND' },
+    });
+    return;
+  }
+
+  if (!user.refreshToken) {
     res.status(400).json({
       error: {
-        message: 'User is Already Logged Out or Does Not Exist.',
+        message: 'User is Already Logged Out',
         code: 'ALREADY_LOGGED_OUT',
       },
     });

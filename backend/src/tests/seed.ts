@@ -10,7 +10,7 @@ export async function seedTestDb() {
       email: 'admin@taskboard.com',
       password: hashedPassword,
       username: 'admin',
-      globalRole: 'GLOBAL_ADMIN'
-    }
+      globalRole: 'GLOBAL_ADMIN',
+    },
   });
 }
