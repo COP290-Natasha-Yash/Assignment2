@@ -1,0 +1,71 @@
+.registerContainer {
+  height: 100vh;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background: linear-gradient(135deg, #667eea, #764ba2);
+}
+
+.registerCard {
+  background: white;
+  padding: 40px;
+  width: 360px;
+  border-radius: 12px;
+  box-shadow: 0px 10px 30px rgba(0,0,0,0.2);
+}
+
+.registerTitle {
+  text-align: center;
+  margin-bottom: 25px;
+}
+
+.inputGroup {
+  display: flex;
+  flex-direction: column;
+  margin-bottom: 15px;
+}
+
+.inputGroup label {
+  margin-bottom: 5px;
+  font-weight: 500;
+}
+
+.inputGroup input {
+  padding: 10px;
+  border-radius: 6px;
+  border: 1px solid #ccc;
+}
+
+.inputGroup input:focus {
+  outline: none;
+  border-color: #667eea;
+}
+
+.registerButton {
+  width: 100%;
+  padding: 10px;
+  border: none;
+  background: #667eea;
+  color: white;
+  font-size: 16px;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.registerButton:hover {
+  background: #5a67d8;
+}
+
+.loginLink {
+  text-align: center;
+  margin-top: 15px;
+}
+
+.loginLink a {
+  color: #667eea;
+  text-decoration: none;
+}
+
+.loginLink a:hover {
+  text-decoration: underline;
+}
