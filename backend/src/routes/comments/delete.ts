@@ -31,14 +31,12 @@ router.delete(
 
     const authorId = req.userId as string;
     if (comment.authorId !== req.userId) {
-      res
-        .status(403)
-        .json({
-          error: {
-            message: 'You Can Only Delete Your Own Comments',
-            code: 'FORBIDDEN',
-          },
-        });
+      res.status(403).json({
+        error: {
+          message: 'You Can Only Delete Your Own Comments',
+          code: 'FORBIDDEN',
+        },
+      });
       return;
     }
 

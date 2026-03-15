@@ -10,11 +10,9 @@ router.patch('/:notificationId', async (req: Request, res: Response) => {
     where: { id: notificationId },
   });
   if (!notification) {
-    res
-      .status(404)
-      .json({
-        error: { message: 'Notification Not Found', code: 'NOT_FOUND' },
-      });
+    res.status(404).json({
+      error: { message: 'Notification Not Found', code: 'NOT_FOUND' },
+    });
     return;
   }
 

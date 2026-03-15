@@ -11,11 +11,9 @@ router.post('/login', async (req: Request, res: Response) => {
   const { email, username, password } = req.body;
 
   if ((!email && !username) || !password) {
-    res
-      .status(400)
-      .json({
-        error: { message: 'All Fields are Required.', code: 'BAD_REQUEST' },
-      });
+    res.status(400).json({
+      error: { message: 'All Fields are Required.', code: 'BAD_REQUEST' },
+    });
     return;
   }
 
@@ -24,22 +22,18 @@ router.post('/login', async (req: Request, res: Response) => {
   });
 
   if (!user) {
-    res
-      .status(401)
-      .json({
-        error: { message: 'Invalid Credentials', code: 'UNAUTHORIZED' },
-      });
+    res.status(401).json({
+      error: { message: 'Invalid Credentials', code: 'UNAUTHORIZED' },
+    });
     return;
   }
 
   const valid = await bcrypt.compare(password, user.password);
 
   if (!valid) {
-    res
-      .status(401)
-      .json({
-        error: { message: 'Invalid Credentials', code: 'UNAUTHORIZED' },
-      });
+    res.status(401).json({
+      error: { message: 'Invalid Credentials', code: 'UNAUTHORIZED' },
+    });
     return;
   }
 
@@ -64,16 +58,14 @@ router.post('/login', async (req: Request, res: Response) => {
     data: { refreshToken: refreshToken },
   });
 
-  res
-    .status(200)
-    .json({
-      user: {
-        id: user.id,
-        name: user.name,
-        email: user.email,
-        role: user.role,
-      },
-    });
+  res.status(200).json({
+    user: {
+      id: user.id,
+      name: user.name,
+      email: user.email,
+      role: user.role,
+    },
+  });
 });
 
 export default router;

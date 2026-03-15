@@ -11,22 +11,18 @@ router.post('/refresh', async (req: Request, res: Response) => {
   const refreshToken = req.cookies.refreshToken;
 
   if (!refreshToken) {
-    res
-      .status(400)
-      .json({
-        error: { message: 'Refresh Token Required', code: 'BAD_REQUEST' },
-      });
+    res.status(400).json({
+      error: { message: 'Refresh Token Required', code: 'BAD_REQUEST' },
+    });
     return;
   }
 
   const user = await prisma.user.findUnique({ where: { refreshToken } });
 
   if (!user) {
-    res
-      .status(401)
-      .json({
-        error: { message: 'Invalid Refresh Token', code: 'UNAUTHORIZED' },
-      });
+    res.status(401).json({
+      error: { message: 'Invalid Refresh Token', code: 'UNAUTHORIZED' },
+    });
     return;
   }
 

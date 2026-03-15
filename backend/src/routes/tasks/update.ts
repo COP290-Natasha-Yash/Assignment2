@@ -67,14 +67,12 @@ router.patch(
     } = req.body;
 
     if (type === 'STORY' && parentId) {
-      res
-        .status(400)
-        .json({
-          error: {
-            message: 'A "STORY" Cannot Have a Parent',
-            code: 'BAD_REQUEST',
-          },
-        });
+      res.status(400).json({
+        error: {
+          message: 'A "STORY" Cannot Have a Parent',
+          code: 'BAD_REQUEST',
+        },
+      });
       return;
     }
 
@@ -82,23 +80,19 @@ router.patch(
       const parent = await prisma.task.findUnique({ where: { id: parentId } });
 
       if (!parent) {
-        res
-          .status(400)
-          .json({
-            error: { message: 'Parent Task Not Found', code: 'BAD_REQUEST' },
-          });
+        res.status(400).json({
+          error: { message: 'Parent Task Not Found', code: 'BAD_REQUEST' },
+        });
         return;
       }
 
       if (parent.type !== 'STORY') {
-        res
-          .status(400)
-          .json({
-            error: {
-              message: 'Parent Task Must be a Story',
-              code: 'BAD_REQUEST',
-            },
-          });
+        res.status(400).json({
+          error: {
+            message: 'Parent Task Must be a Story',
+            code: 'BAD_REQUEST',
+          },
+        });
         return;
       }
     }
@@ -112,14 +106,12 @@ router.patch(
         },
       });
       if (!member) {
-        res
-          .status(400)
-          .json({
-            error: {
-              message: 'Assignee Must Be a Project "ADMIN" or "MEMBER',
-              code: 'BAD_REQUEST',
-            },
-          });
+        res.status(400).json({
+          error: {
+            message: 'Assignee Must Be a Project "ADMIN" or "MEMBER',
+            code: 'BAD_REQUEST',
+          },
+        });
         return;
       }
     }
@@ -127,14 +119,12 @@ router.patch(
     if (dueDate) {
       const due = new Date(dueDate);
       if (due <= new Date()) {
-        res
-          .status(400)
-          .json({
-            error: {
-              message: 'Due date must be in the future',
-              code: 'BAD_REQUEST',
-            },
-          });
+        res.status(400).json({
+          error: {
+            message: 'Due date must be in the future',
+            code: 'BAD_REQUEST',
+          },
+        });
         return;
       }
     }
@@ -176,14 +166,12 @@ router.patch(
           where: { columnId: newColumn.id },
         });
         if (newColumn.wipLimit && taskCount >= newColumn.wipLimit) {
-          res
-            .status(400)
-            .json({
-              error: {
-                message: 'WIP limit reached',
-                code: 'WIP_LIMIT_REACHED',
-              },
-            });
+          res.status(400).json({
+            error: {
+              message: 'WIP limit reached',
+              code: 'WIP_LIMIT_REACHED',
+            },
+          });
           return;
         }
 
@@ -192,15 +180,13 @@ router.patch(
           column.name !== 'CLOSED' &&
           newColumn.name !== 'CLOSED'
         ) {
-          res
-            .status(400)
-            .json({
-              error: {
-                message:
-                  'This Column Transition is Not Allowed. Can Only Move to Adjacent Columns',
-                code: 'INVALID_TRANSITION',
-              },
-            });
+          res.status(400).json({
+            error: {
+              message:
+                'This Column Transition is Not Allowed. Can Only Move to Adjacent Columns',
+              code: 'INVALID_TRANSITION',
+            },
+          });
           return;
         }
         updatedData.columnId = newColumn.id;
@@ -214,14 +200,12 @@ router.patch(
       if (task.type === 'STORY') {
         const expectedStatus = await getExpectedStoryStatus(taskId);
         if (expectedStatus && status !== expectedStatus) {
-          res
-            .status(400)
-            .json({
-              error: {
-                message: 'Story status is inconsistent with children',
-                code: 'INVALID_STATUS',
-              },
-            });
+          res.status(400).json({
+            error: {
+              message: 'Story status is inconsistent with children',
+              code: 'INVALID_STATUS',
+            },
+          });
           return;
         }
       }

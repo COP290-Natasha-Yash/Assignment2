@@ -23,11 +23,9 @@ router.delete(
 
     const userId = req.params.userId as string;
     if (!userId) {
-      res
-        .status(400)
-        .json({
-          error: { message: 'UserId is Required', code: 'BAD_REQUEST' },
-        });
+      res.status(400).json({
+        error: { message: 'UserId is Required', code: 'BAD_REQUEST' },
+      });
       return;
     }
 
@@ -43,14 +41,12 @@ router.delete(
       where: { userId, projectId },
     });
     if (!member) {
-      res
-        .status(404)
-        .json({
-          error: {
-            message: 'User is NOT a Member in This Project',
-            code: 'NOT_FOUND',
-          },
-        });
+      res.status(404).json({
+        error: {
+          message: 'User is NOT a Member in This Project',
+          code: 'NOT_FOUND',
+        },
+      });
       return;
     }
 

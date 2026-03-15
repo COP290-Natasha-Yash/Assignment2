@@ -12,11 +12,9 @@ router.patch(
   async (req: Request, res: Response) => {
     const columns = req.body;
     if (!columns || !Array.isArray(columns)) {
-      res
-        .status(400)
-        .json({
-          error: { message: 'Columns array is required', code: 'BAD_REQUEST' },
-        });
+      res.status(400).json({
+        error: { message: 'Columns array is required', code: 'BAD_REQUEST' },
+      });
       return;
     }
 

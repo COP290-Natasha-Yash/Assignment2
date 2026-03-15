@@ -58,23 +58,19 @@ router.post(
     }
 
     if (!reporterId) {
-      res
-        .status(400)
-        .json({
-          error: { message: 'Reporter ID is required', code: 'BAD_REQUEST' },
-        });
+      res.status(400).json({
+        error: { message: 'Reporter ID is required', code: 'BAD_REQUEST' },
+      });
       return;
     }
 
     if (type === 'STORY' && parentId) {
-      res
-        .status(400)
-        .json({
-          error: {
-            message: 'A "STORY" Cannon Have a Parent',
-            code: 'BAD_REQUEST',
-          },
-        });
+      res.status(400).json({
+        error: {
+          message: 'A "STORY" Cannon Have a Parent',
+          code: 'BAD_REQUEST',
+        },
+      });
       return;
     }
 
@@ -82,23 +78,19 @@ router.post(
       const parent = await prisma.task.findUnique({ where: { id: parentId } });
 
       if (!parent) {
-        res
-          .status(400)
-          .json({
-            error: { message: 'Parent Task Not Found', code: 'BAD_REQUEST' },
-          });
+        res.status(400).json({
+          error: { message: 'Parent Task Not Found', code: 'BAD_REQUEST' },
+        });
         return;
       }
 
       if (parent.type !== 'STORY') {
-        res
-          .status(400)
-          .json({
-            error: {
-              message: 'Parent task must be a Story',
-              code: 'BAD_REQUEST',
-            },
-          });
+        res.status(400).json({
+          error: {
+            message: 'Parent task must be a Story',
+            code: 'BAD_REQUEST',
+          },
+        });
         return;
       }
     }
@@ -112,14 +104,12 @@ router.post(
         },
       });
       if (!member) {
-        res
-          .status(400)
-          .json({
-            error: {
-              message: 'Assignee Must Be a Project "ADMIN" or "MEMBER',
-              code: 'BAD_REQUEST',
-            },
-          });
+        res.status(400).json({
+          error: {
+            message: 'Assignee Must Be a Project "ADMIN" or "MEMBER',
+            code: 'BAD_REQUEST',
+          },
+        });
         return;
       }
     }
@@ -127,14 +117,12 @@ router.post(
     if (dueDate) {
       const due = new Date(dueDate);
       if (due <= new Date()) {
-        res
-          .status(400)
-          .json({
-            error: {
-              message: 'Due date must be in the future',
-              code: 'BAD_REQUEST',
-            },
-          });
+        res.status(400).json({
+          error: {
+            message: 'Due date must be in the future',
+            code: 'BAD_REQUEST',
+          },
+        });
         return;
       }
     }

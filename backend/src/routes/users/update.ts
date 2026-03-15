@@ -26,11 +26,9 @@ router.patch('/me', async (req: Request, res: Response) => {
   const { name, avatar } = req.body;
 
   if (name !== undefined && name.trim() === '') {
-    res
-      .status(400)
-      .json({
-        error: { message: 'Name Cannot be Empty', code: 'BAD_REQUEST' },
-      });
+    res.status(400).json({
+      error: { message: 'Name Cannot be Empty', code: 'BAD_REQUEST' },
+    });
     return;
   }
 

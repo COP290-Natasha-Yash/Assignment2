@@ -33,27 +33,23 @@ router.patch(
 
     const content = req.body.content;
     if (!content) {
-      res
-        .status(400)
-        .json({
-          error: {
-            message: 'Content is Required to Add Comment',
-            code: 'BAD_REQUEST',
-          },
-        });
+      res.status(400).json({
+        error: {
+          message: 'Content is Required to Add Comment',
+          code: 'BAD_REQUEST',
+        },
+      });
       return;
     }
 
     const authorId = req.userId as string;
     if (comment.authorId !== req.userId) {
-      res
-        .status(403)
-        .json({
-          error: {
-            message: 'You Can Only Edit Your Own Comments',
-            code: 'FORBIDDEN',
-          },
-        });
+      res.status(403).json({
+        error: {
+          message: 'You Can Only Edit Your Own Comments',
+          code: 'FORBIDDEN',
+        },
+      });
       return;
     }
 

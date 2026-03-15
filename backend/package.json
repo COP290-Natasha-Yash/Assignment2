@@ -5,14 +5,16 @@
   "main": "index.js",
   "scripts": {
     "dev": "nodemon --exec ts-node src/server.ts",
-    "test": "jest",
+    "test": "jest --runInBand",
     "lint": "eslint src/**/*.ts",
+    "seed": "ts-node prisma/seed.ts",
     "format": "prettier --write src/**/*.ts"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "type": "commonjs",
+  
   "dependencies": {
     "@prisma/adapter-better-sqlite3": "^7.4.2",
     "@prisma/adapter-libsql": "^7.4.2",

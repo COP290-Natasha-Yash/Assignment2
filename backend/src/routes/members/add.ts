@@ -24,11 +24,9 @@ router.post(
     const { userId, role } = req.body;
 
     if (!userId) {
-      res
-        .status(400)
-        .json({
-          error: { message: 'UserId is Required', code: 'BAD_REQUEST' },
-        });
+      res.status(400).json({
+        error: { message: 'UserId is Required', code: 'BAD_REQUEST' },
+      });
       return;
     }
 
@@ -44,11 +42,9 @@ router.post(
       where: { userId, projectId },
     });
     if (existing) {
-      res
-        .status(400)
-        .json({
-          error: { message: 'User is Already a Member', code: 'BAD_REQUEST' },
-        });
+      res.status(400).json({
+        error: { message: 'User is Already a Member', code: 'BAD_REQUEST' },
+      });
       return;
     }
 

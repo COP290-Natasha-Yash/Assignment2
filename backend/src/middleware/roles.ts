@@ -17,11 +17,9 @@ export const requireGlobalAdmin = async (
   }
 
   if (user.globalRole !== 'GLOBAL_ADMIN') {
-    res
-      .status(403)
-      .json({
-        error: { message: 'Global Admin Access Required', code: 'FORBIDDEN' },
-      });
+    res.status(403).json({
+      error: { message: 'Global Admin Access Required', code: 'FORBIDDEN' },
+    });
     return;
   } else {
     next();
@@ -43,26 +41,22 @@ export const requireProjectRole = (allowedRoles: string[]) => {
     });
 
     if (!member) {
-      res
-        .status(403)
-        .json({
-          error: {
-            message: 'You Are Not a Member of This Project',
-            code: 'FORBIDDEN',
-          },
-        });
+      res.status(403).json({
+        error: {
+          message: 'You Are Not a Member of This Project',
+          code: 'FORBIDDEN',
+        },
+      });
       return;
     }
 
     if (!allowedRoles.includes(member.role)) {
-      res
-        .status(403)
-        .json({
-          error: {
-            message: 'You Do Not Have Permission to Do This',
-            code: 'FORBIDDEN',
-          },
-        });
+      res.status(403).json({
+        error: {
+          message: 'You Do Not Have Permission to Do This',
+          code: 'FORBIDDEN',
+        },
+      });
       return;
     } else {
       next();

@@ -44,24 +44,20 @@ router.patch(
     }
 
     if (task.type === 'STORY') {
-      res
-        .status(400)
-        .json({
-          error: {
-            message: '"STORY" Type task is NOT Movable',
-            code: 'INVALID_REQUEST',
-          },
-        });
+      res.status(400).json({
+        error: {
+          message: '"STORY" Type task is NOT Movable',
+          code: 'INVALID_REQUEST',
+        },
+      });
       return;
     }
 
     const newColumnId = req.body.columnId;
     if (!newColumnId) {
-      res
-        .status(400)
-        .json({
-          error: { message: 'New Column ID is Required', code: 'BAD_REQUEST' },
-        });
+      res.status(400).json({
+        error: { message: 'New Column ID is Required', code: 'BAD_REQUEST' },
+      });
       return;
     }
 
@@ -76,14 +72,12 @@ router.patch(
     }
 
     if (newColumn.boardId !== boardId) {
-      res
-        .status(400)
-        .json({
-          error: {
-            message: 'Moving Tasks Between Different Boards Not Allowed',
-            code: 'INVALID_REQUEST',
-          },
-        });
+      res.status(400).json({
+        error: {
+          message: 'Moving Tasks Between Different Boards Not Allowed',
+          code: 'INVALID_REQUEST',
+        },
+      });
       return;
     }
 
@@ -95,15 +89,13 @@ router.patch(
       currentColumn!.name !== 'CLOSED' &&
       newColumn.name !== 'CLOSED'
     ) {
-      res
-        .status(400)
-        .json({
-          error: {
-            message:
-              'This Column Transition is Not Allowed. Can Only Move to Adjacent Columns',
-            code: 'INVALID_TRANSITION',
-          },
-        });
+      res.status(400).json({
+        error: {
+          message:
+            'This Column Transition is Not Allowed. Can Only Move to Adjacent Columns',
+          code: 'INVALID_TRANSITION',
+        },
+      });
       return;
     }
 
@@ -111,11 +103,9 @@ router.patch(
       where: { columnId: newColumnId },
     });
     if (newColumn.wipLimit && taskCount >= newColumn.wipLimit) {
-      res
-        .status(400)
-        .json({
-          error: { message: 'WIP limit reached', code: 'WIP_LIMIT_REACHED' },
-        });
+      res.status(400).json({
+        error: { message: 'WIP limit reached', code: 'WIP_LIMIT_REACHED' },
+      });
       return;
     }
 

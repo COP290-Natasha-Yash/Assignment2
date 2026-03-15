@@ -19,14 +19,12 @@ router.post('/logout', async (req: Request, res: Response) => {
   });
 
   if (!user || !user.refreshToken) {
-    res
-      .status(400)
-      .json({
-        error: {
-          message: 'User is Already Logged Out or Does Not Exist.',
-          code: 'ALREADY_LOGGED_OUT',
-        },
-      });
+    res.status(400).json({
+      error: {
+        message: 'User is Already Logged Out or Does Not Exist.',
+        code: 'ALREADY_LOGGED_OUT',
+      },
+    });
     return;
   }
 

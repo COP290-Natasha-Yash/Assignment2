@@ -11,32 +11,26 @@ router.post('/register', async (req: Request, res: Response) => {
   const { name, email, password, username } = req.body;
 
   if (!name || !email || !password || !username) {
-    res
-      .status(400)
-      .json({
-        error: { message: 'All Fields are Required.', code: 'BAD_REQUEST' },
-      });
+    res.status(400).json({
+      error: { message: 'All Fields are Required.', code: 'BAD_REQUEST' },
+    });
     return;
   }
 
   const existingEmail = await prisma.user.findUnique({ where: { email } });
   if (existingEmail) {
-    res
-      .status(400)
-      .json({
-        error: { message: 'Email Already in Use.', code: 'EMAIL_TAKEN' },
-      });
+    res.status(400).json({
+      error: { message: 'Email Already in Use.', code: 'EMAIL_TAKEN' },
+    });
     return;
   }
   const existingUsername = await prisma.user.findUnique({
     where: { username },
   });
   if (existingUsername) {
-    res
-      .status(400)
-      .json({
-        error: { message: 'Username Already Taken', code: 'USERNAME_TAKEN' },
-      });
+    res.status(400).json({
+      error: { message: 'Username Already Taken', code: 'USERNAME_TAKEN' },
+    });
     return;
   }
 
@@ -67,16 +61,14 @@ router.post('/register', async (req: Request, res: Response) => {
     data: { refreshToken: refreshToken },
   });
 
-  res
-    .status(201)
-    .json({
-      user: {
-        id: user.id,
-        name: user.name,
-        email: user.email,
-        globalRole: user.globalRole,
-      },
-    });
+  res.status(201).json({
+    user: {
+      id: user.id,
+      name: user.name,
+      email: user.email,
+      globalRole: user.globalRole,
+    },
+  });
 });
 
 export default router;
