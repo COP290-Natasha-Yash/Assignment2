@@ -127,3 +127,7 @@ describe('POST /api/projects/:id/members', () => {
     expect(response.body.error.code).toBe('BAD_REQUEST');
   });
 });
+
+afterAll(async () => {
+  await clearDatabase();
+});

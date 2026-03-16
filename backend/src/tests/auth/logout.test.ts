@@ -88,3 +88,7 @@ describe('POST /api/auth/logout', () => {
     expect(response.body.error.code).toBe('NOT_FOUND');
   });
 });
+
+afterAll(async () => {
+  await clearDatabase();
+});

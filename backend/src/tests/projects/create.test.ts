@@ -81,3 +81,7 @@ describe('POST /api/projects', () => {
     expect(response.body.description).toBe('Test Description');
   });
 });
+
+afterAll(async () => {
+  await clearDatabase();
+});

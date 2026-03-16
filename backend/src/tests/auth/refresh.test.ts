@@ -46,3 +46,7 @@ describe('POST /api/auth/refresh', () => {
     expect(response.body.error.code).toBe('UNAUTHORIZED');
   });
 });
+
+afterAll(async () => {
+  await clearDatabase();
+});

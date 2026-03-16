@@ -178,3 +178,7 @@ describe('POST /api/auth/register', () => {
     expect(response.status).toBe(400);
   });
 });
+
+afterAll(async () => {
+  await clearDatabase();
+});

@@ -49,3 +49,7 @@ describe('GET /api/projects', () => {
 
   //One more test case that a project member can see all of his projects is in Members testing.
 });
+
+afterAll(async () => {
+  await clearDatabase();
+});

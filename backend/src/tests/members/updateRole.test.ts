@@ -105,3 +105,7 @@ describe('PATCH /api/projects/:id/members/:userId', () => {
     expect(response.body.role).toBe('MEMBER');
   });
 });
+
+afterAll(async () => {
+  await clearDatabase();
+});

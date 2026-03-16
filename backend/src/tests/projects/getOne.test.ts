@@ -68,3 +68,7 @@ describe('GET /api/projects/:id', () => {
     expect(response.body.error.code).toBe('FORBIDDEN');
   });
 });
+
+afterAll(async () => {
+  await clearDatabase();
+});

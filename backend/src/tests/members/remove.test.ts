@@ -98,3 +98,7 @@ describe('DELETE /api/projects/:id/members/:userId', () => {
     expect(response.body.message).toBe('User Was Successfully Removed');
   });
 });
+
+afterAll(async () => {
+  await clearDatabase();
+});

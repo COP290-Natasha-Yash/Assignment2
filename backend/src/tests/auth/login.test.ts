@@ -117,3 +117,7 @@ describe('POST /api/auth/login', () => {
     expect(response.status).toBe(400);
   });
 });
+
+afterAll(async () => {
+  await clearDatabase();
+});

@@ -78,3 +78,7 @@ describe('PATCH /api/projects/:id/archive', () => {
     expect(response.body.error.code).toBe('BAD_REQUEST');
   });
 });
+
+afterAll(async () => {
+  await clearDatabase();
+});

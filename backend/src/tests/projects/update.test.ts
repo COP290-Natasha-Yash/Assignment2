@@ -103,3 +103,7 @@ describe('PATCH /api/projects/:id', () => {
     expect(response.body.error.code).toBe('BAD_REQUEST');
   });
 });
+
+afterAll(async () => {
+  await clearDatabase();
+});
