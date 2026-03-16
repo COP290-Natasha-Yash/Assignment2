@@ -1,10 +1,11 @@
 import request from 'supertest';
 import app from '../../index';
 
-import { seedTestDb } from '../seed';
+import { clearDatabase, seedAdmin } from '../00_helpers/testHelpers';
 
 beforeAll(async () => {
-  await seedTestDb();
+  await clearDatabase();
+  await seedAdmin();
 });
 
 describe('POST /api/auth/register', () => {

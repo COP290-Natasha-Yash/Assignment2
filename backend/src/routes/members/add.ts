@@ -10,6 +10,27 @@ router.post(
   '/:id/members',
   requireProjectRole(['ADMIN']),
   async (req: Request, res: Response) => {
+    const { userId, role } = req.body;
+
+    const validRoles = ['ADMIN', 'MEMBER', 'VIEWER'];
+
+    if (!role || !validRoles.includes(role)) {
+      res.status(400).json({
+        error: {
+          message: 'Role must be ADMIN, MEMBER or VIEWER',
+          code: 'BAD_REQUEST',
+        },
+      });
+      return;
+    }
+
+    if (!userId) {
+      res.status(400).json({
+        error: { message: 'UserId is Required', code: 'BAD_REQUEST' },
+      });
+      return;
+    }
+
     const projectId = req.params.id as string;
     const project = await prisma.project.findUnique({
       where: { id: projectId },
@@ -18,15 +39,6 @@ router.post(
       res
         .status(404)
         .json({ error: { message: 'Project Not Found', code: 'NOT_FOUND' } });
-      return;
-    }
-
-    const { userId, role } = req.body;
-
-    if (!userId) {
-      res.status(400).json({
-        error: { message: 'UserId is Required', code: 'BAD_REQUEST' },
-      });
       return;
     }
 

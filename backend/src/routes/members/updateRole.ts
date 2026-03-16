@@ -10,14 +10,17 @@ router.patch(
   '/:id/members/:userId',
   requireProjectRole(['ADMIN']),
   async (req: Request, res: Response) => {
-    const projectId = req.params.id as string;
-    const project = await prisma.project.findUnique({
-      where: { id: projectId },
-    });
-    if (!project) {
-      res
-        .status(404)
-        .json({ error: { message: 'Project Not Found', code: 'NOT_FOUND' } });
+    const role = req.body.role;
+
+    const validRoles = ['ADMIN', 'MEMBER', 'VIEWER'];
+
+    if (!role || !validRoles.includes(role)) {
+      res.status(400).json({
+        error: {
+          message: 'Role must be ADMIN, MEMBER or VIEWER',
+          code: 'BAD_REQUEST',
+        },
+      });
       return;
     }
 
@@ -29,11 +32,14 @@ router.patch(
       return;
     }
 
-    const user = await prisma.user.findUnique({ where: { id: userId } });
-    if (!user) {
+    const projectId = req.params.id as string;
+    const project = await prisma.project.findUnique({
+      where: { id: projectId },
+    });
+    if (!project) {
       res
         .status(404)
-        .json({ error: { message: 'User Not Found', code: 'NOT_FOUND' } });
+        .json({ error: { message: 'Project Not Found', code: 'NOT_FOUND' } });
       return;
     }
 
@@ -49,8 +55,6 @@ router.patch(
       });
       return;
     }
-
-    const role = req.body.role;
 
     const updated_member = await prisma.projectMember.update({
       where: { id: member.id },

@@ -2,20 +2,27 @@ import request from 'supertest';
 import app from '../../index';
 import { prisma } from '../../prisma';
 
+import {
+  clearDatabase,
+  seedAdmin,
+  seedUser,
+  loginUser,
+} from '../00_helpers/testHelpers';
+
 let cookie: string;
 
 beforeAll(async () => {
-  const response = await request(app).post('/api/auth/login').send({
-    email: 'yash@test.com',
-    password: 'yash123',
-  });
-  cookie = response.headers['set-cookie'];
+  await clearDatabase();
+  await seedAdmin();
+  await seedUser('Yash', 'yash@test.com', '_yash_', 'yash123');
+  cookie = await loginUser('_yash_', 'yash123');
 });
 
 describe('POST /api/auth/logout', () => {
   it('should fail if not logged in', async () => {
     const response = await request(app).post('/api/auth/logout').send();
     expect(response.status).toBe(401);
+
     expect(response.body.error.code).toBe('UNAUTHORIZED');
   });
 
@@ -23,6 +30,7 @@ describe('POST /api/auth/logout', () => {
     const response = await request(app)
       .post('/api/auth/logout')
       .set('Cookie', cookie);
+
     expect(response.status).toBe(200);
     expect(response.body.message).toBe('Logged Out Successfully');
   });
@@ -31,16 +39,18 @@ describe('POST /api/auth/logout', () => {
     const response = await request(app)
       .post('/api/auth/logout')
       .set('Cookie', cookie);
+
     expect(response.status).toBe(400);
     expect(response.body.error.code).toBe('ALREADY_LOGGED_OUT');
   });
 
   it('should clear cookies on logout', async () => {
-    const loginresponse = await request(app).post('/api/auth/login').send({
+    const loginResponse = await request(app).post('/api/auth/login').send({
       email: 'yash@test.com',
       password: 'yash123',
     });
-    const freshCookie = loginresponse.headers['set-cookie'];
+    const freshCookie = loginResponse.headers['set-cookie'];
+
     const response = await request(app)
       .post('/api/auth/logout')
       .set('Cookie', freshCookie);

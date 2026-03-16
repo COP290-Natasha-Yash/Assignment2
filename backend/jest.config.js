@@ -4,6 +4,6 @@ module.exports = {
   testMatch: ['**/*.test.ts'],
   globalSetup: './src/tests/setup.ts',
   globalTeardown: './src/tests/teardown.ts',
-
+  
   setupFiles: ['./src/tests/env.ts'],
 };

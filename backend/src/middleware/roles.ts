@@ -11,7 +11,7 @@ export const requireGlobalAdmin = async (
   const user = await prisma.user.findUnique({ where: { id: userId } });
   if (!user) {
     res
-      .status(400)
+      .status(401)
       .json({ error: { message: 'Login Required', code: 'BAD_REQUEST' } });
     return;
   }

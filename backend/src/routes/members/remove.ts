@@ -29,14 +29,6 @@ router.delete(
       return;
     }
 
-    const user = await prisma.user.findUnique({ where: { id: userId } });
-    if (!user) {
-      res
-        .status(404)
-        .json({ error: { message: 'User Not Found', code: 'NOT_FOUND' } });
-      return;
-    }
-
     const member = await prisma.projectMember.findFirst({
       where: { userId, projectId },
     });

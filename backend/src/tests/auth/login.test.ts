@@ -1,6 +1,15 @@
 import request from 'supertest';
 import app from '../../index';
 
+import { clearDatabase, seedAdmin, seedUser } from '../00_helpers/testHelpers';
+
+beforeAll(async () => {
+  await clearDatabase();
+  await seedAdmin();
+  await seedUser('Yash', 'yash@test.com', '_yash_', 'yash123');
+  await seedUser('Natasha', 'natasha@test.com', '_natasha_', 'natasha123');
+});
+
 describe('POST /api/auth/login', () => {
   it('should login successfully with email', async () => {
     const response = await request(app)
@@ -38,8 +47,8 @@ describe('POST /api/auth/login', () => {
 
   it('should fail with wrong password', async () => {
     const response = await request(app).post('/api/auth/login').send({
-      password: 'yash12345',
       username: '_yash_',
+      password: 'yash12345',
     });
 
     expect(response.status).toBe(401);
@@ -58,8 +67,8 @@ describe('POST /api/auth/login', () => {
 
   it('should fail with non-existent username', async () => {
     const response = await request(app).post('/api/auth/login').send({
-      password: 'projectadmin123',
-      username: '_projectadmin12_',
+      username: '_yash12_',
+      password: 'yash123',
     });
 
     expect(response.status).toBe(401);
@@ -68,8 +77,8 @@ describe('POST /api/auth/login', () => {
 
   it('should set cookie on login', async () => {
     const response = await request(app).post('/api/auth/login').send({
-      password: 'projectviewer123',
-      username: '_projectviewer_',
+      username: '_yash_',
+      password: 'yash123',
     });
 
     expect(response.headers['set-cookie']).toHaveLength(2);

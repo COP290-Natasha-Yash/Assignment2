@@ -1,14 +1,20 @@
 import request from 'supertest';
 import app from '../../index';
 
+import {
+  clearDatabase,
+  seedAdmin,
+  seedUser,
+  loginUser,
+} from '../00_helpers/testHelpers';
+
 let cookie: string;
 
 beforeAll(async () => {
-  const response = await request(app).post('/api/auth/login').send({
-    email: 'yash@test.com',
-    password: 'yash123',
-  });
-  cookie = response.headers['set-cookie'];
+  await clearDatabase();
+  await seedAdmin();
+  await seedUser('Yash', 'yash@test.com', '_yash_', 'yash123');
+  cookie = await loginUser('_yash_', 'yash123');
 });
 
 describe('POST /api/auth/refresh', () => {
@@ -16,6 +22,7 @@ describe('POST /api/auth/refresh', () => {
     const response = await request(app)
       .post('/api/auth/refresh')
       .set('Cookie', cookie);
+
     expect(response.status).toBe(200);
     expect(response.headers['set-cookie']).toHaveLength(1);
     expect(response.body.message).toBe('Token Refreshed Successfully');
