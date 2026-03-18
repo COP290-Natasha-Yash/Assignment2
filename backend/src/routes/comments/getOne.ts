@@ -2,13 +2,20 @@ import express, { Request, Response } from 'express';
 
 import { prisma } from '../../prisma';
 
+import { requireProjectRole } from '../../middleware/roles';
+
 const router = express.Router();
 
 router.get(
-  '/:taskId/comments/:commentId',
+  '/:id/tasks/:taskId/comments/:commentId',
+  requireProjectRole(['ADMIN', 'MEMBER', 'VIEWER']),
   async (req: Request, res: Response) => {
+    const projectId = req.params.id as string;
+
     const taskId = req.params.taskId as string;
-    const task = await prisma.task.findUnique({ where: { id: taskId } });
+    const task = await prisma.task.findFirst({
+      where: { id: taskId, column: { board: { projectId } } },
+    });
     if (!task) {
       res
         .status(404)
@@ -21,6 +28,13 @@ router.get(
       where: { id: commentId },
     });
     if (!comment) {
+      res
+        .status(404)
+        .json({ error: { message: 'Comment NOT Found', code: 'NOT_FOUND' } });
+      return;
+    }
+
+    if (comment.taskId !== taskId) {
       res
         .status(404)
         .json({ error: { message: 'Comment NOT Found', code: 'NOT_FOUND' } });

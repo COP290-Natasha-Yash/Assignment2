@@ -7,7 +7,7 @@ import {
   seedUser,
   seedProject,
   loginUser,
-} from '../00_helpers/testHelpers';
+} from '../helpers/testHelpers';
 
 let adminCookie: string;
 let userCookie: string;
@@ -48,7 +48,7 @@ beforeAll(async () => {
 });
 
 describe('POST /api/projects/:id/members', () => {
-  it('should fail if not logged in', async () => {
+  it('1. Should fail if not logged in', async () => {
     const response = await request(app)
       .post(`/api/projects/${projectId}/members`)
       .send({ userId: projectAdminId, role: 'ADMIN' });
@@ -57,7 +57,7 @@ describe('POST /api/projects/:id/members', () => {
     expect(response.body.error.code).toBe('UNAUTHORIZED');
   });
 
-  it('should fail if not project admin', async () => {
+  it('2. Should fail if not project admin', async () => {
     const response = await request(app)
       .post(`/api/projects/${projectId}/members`)
       .send({ userId: projectAdminId, role: 'ADMIN' })
@@ -67,7 +67,7 @@ describe('POST /api/projects/:id/members', () => {
     expect(response.body.error.code).toBe('FORBIDDEN');
   });
 
-  it('should fail if user not found', async () => {
+  it('3. Should fail if user not found', async () => {
     const response = await request(app)
       .post(`/api/projects/${projectId}/members`)
       .send({ userId: 'invaliduserid123', role: 'MEMBER' })
@@ -77,7 +77,7 @@ describe('POST /api/projects/:id/members', () => {
     expect(response.body.error.code).toBe('NOT_FOUND');
   });
 
-  it('should add project admin successfully', async () => {
+  it('4. Should add project admin successfully', async () => {
     const response = await request(app)
       .post(`/api/projects/${projectId}/members`)
       .send({ userId: projectAdminId, role: 'ADMIN' })
@@ -87,7 +87,7 @@ describe('POST /api/projects/:id/members', () => {
     expect(response.body.role).toBe('ADMIN');
   });
 
-  it('should add project member successfully', async () => {
+  it('5. Should add project member successfully', async () => {
     const response = await request(app)
       .post(`/api/projects/${projectId}/members`)
       .send({ userId: projectMemberId, role: 'MEMBER' })
@@ -97,7 +97,7 @@ describe('POST /api/projects/:id/members', () => {
     expect(response.body.role).toBe('MEMBER');
   });
 
-  it('should add project viewer successfully', async () => {
+  it('6. Should add project viewer successfully', async () => {
     const response = await request(app)
       .post(`/api/projects/${projectId}/members`)
       .send({ userId: projectViewerId, role: 'VIEWER' })
@@ -107,7 +107,7 @@ describe('POST /api/projects/:id/members', () => {
     expect(response.body.role).toBe('VIEWER');
   });
 
-  it('should fail if user already a member', async () => {
+  it('7. Should fail if user already a member', async () => {
     const response = await request(app)
       .post(`/api/projects/${projectId}/members`)
       .send({ userId: projectAdminId, role: 'ADMIN' })
@@ -117,7 +117,7 @@ describe('POST /api/projects/:id/members', () => {
     expect(response.body.error.code).toBe('BAD_REQUEST');
   });
 
-  it('should fail if role is invalid', async () => {
+  it('8. Should fail if role is invalid', async () => {
     const response = await request(app)
       .post(`/api/projects/${projectId}/members`)
       .send({ userId: projectViewerId, role: 'SUPER_HACKER' })

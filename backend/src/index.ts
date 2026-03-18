@@ -22,7 +22,7 @@ app.use('/api/projects', authenticate, projectsRouter);
 app.use('/api/projects', authenticate, boardsRouter);
 app.use('/api/projects', authenticate, columnsRouter);
 app.use('/api/projects', authenticate, tasksRouter);
-app.use('/api/tasks', authenticate, commentsRouter);
+app.use('/api/projects', authenticate, commentsRouter);
 app.use('/api/notifications', authenticate, notificationsRouter);
 app.use('/api/projects', authenticate, membersRouter);
 app.use('/api/users', authenticate, usersRouter);

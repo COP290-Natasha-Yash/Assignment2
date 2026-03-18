@@ -9,7 +9,7 @@ import { createNotification } from '../../utils/createNotification';
 const router = express.Router();
 
 router.patch(
-  '/:taskId/comments/:commentId',
+  '/:id/tasks/:taskId/comments/:commentId',
   async (req: Request, res: Response) => {
     const taskId = req.params.taskId as string;
     const task = await prisma.task.findUnique({ where: { id: taskId } });

@@ -1,11 +1,7 @@
 import express, { Request, Response } from 'express';
-
 import { prisma } from '../../prisma';
-
 import { auditLog } from '../../utils/auditLog';
-
 import { requireProjectRole } from '../../middleware/roles';
-
 import { getExpectedStoryStatus } from '../../utils/getExpectedStoryStatus';
 
 const router = express.Router();
@@ -15,19 +11,17 @@ router.patch(
   requireProjectRole(['ADMIN', 'MEMBER']),
   async (req: Request, res: Response) => {
     const projectId = req.params.id as string;
-    const project = await prisma.project.findUnique({
-      where: { id: projectId },
-    });
-    if (!project) {
+    const boardId = req.params.boardId as string;
+
+    const board = await prisma.board.findUnique({ where: { id: boardId } });
+    if (!board) {
       res
         .status(404)
-        .json({ error: { message: 'Project Not Found', code: 'NOT_FOUND' } });
+        .json({ error: { message: 'Board Not Found', code: 'NOT_FOUND' } });
       return;
     }
 
-    const boardId = req.params.boardId as string;
-    const board = await prisma.board.findUnique({ where: { id: boardId } });
-    if (!board) {
+    if (board.projectId !== projectId) {
       res
         .status(404)
         .json({ error: { message: 'Board Not Found', code: 'NOT_FOUND' } });
@@ -37,6 +31,17 @@ router.patch(
     const taskId = req.params.taskId as string;
     const task = await prisma.task.findUnique({ where: { id: taskId } });
     if (!task) {
+      res
+        .status(404)
+        .json({ error: { message: 'Task Not Found', code: 'NOT_FOUND' } });
+      return;
+    }
+
+    // check task belongs to this board
+    const taskColumn = await prisma.column.findUnique({
+      where: { id: task.columnId },
+    });
+    if (taskColumn?.boardId !== boardId) {
       res
         .status(404)
         .json({ error: { message: 'Task Not Found', code: 'NOT_FOUND' } });
@@ -109,37 +114,40 @@ router.patch(
       return;
     }
 
-    if (newColumn.name === 'DONE') {
-      await prisma.task.update({
-        where: { id: taskId },
-        data: { resolvedAt: new Date() },
-      });
-    }
-
-    const updated_task = await prisma.task.update({
+    const updatedTask = await prisma.task.update({
       where: { id: taskId },
-      data: { columnId: newColumnId },
+      data: {
+        columnId: newColumnId,
+        status: newColumn.name,
+        resolvedAt: newColumn.name === 'DONE' ? new Date() : null,
+        closedAt: newColumn.name === 'CLOSED' ? new Date() : null,
+      },
     });
 
-    if (updated_task.parentId) {
-      const expectedStatus = await getExpectedStoryStatus(
-        updated_task.parentId
+    if (task.status !== updatedTask.status) {
+      await auditLog(
+        taskId,
+        req.userId!,
+        'STATUS_CHANGED',
+        task.status,
+        updatedTask.status
       );
+    }
 
+    if (updatedTask.parentId) {
+      const expectedStatus = await getExpectedStoryStatus(updatedTask.parentId);
       if (expectedStatus) {
         const storyTask = await prisma.task.findUnique({
-          where: { id: updated_task.parentId },
+          where: { id: updatedTask.parentId },
         });
         const oldStoryStatus = storyTask!.status;
-
         await prisma.task.update({
-          where: { id: updated_task.parentId },
+          where: { id: updatedTask.parentId },
           data: { status: expectedStatus },
         });
-
         if (oldStoryStatus !== expectedStatus) {
           await auditLog(
-            updated_task.parentId,
+            updatedTask.parentId,
             req.userId!,
             'STATUS_CHANGED',
             oldStoryStatus,
@@ -157,7 +165,7 @@ router.patch(
       newColumn.name
     );
 
-    res.status(200).json(updated_task);
+    res.status(200).json(updatedTask);
   }
 );
 

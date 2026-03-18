@@ -8,7 +8,7 @@ import {
   seedProject,
   addMember,
   loginUser,
-} from '../00_helpers/testHelpers';
+} from '../helpers/testHelpers';
 
 let adminCookie: string;
 let userCookie: string;
@@ -43,7 +43,7 @@ beforeAll(async () => {
 });
 
 describe('DELETE /api/projects/:id/members/:userId', () => {
-  it('should fail if not logged in', async () => {
+  it('1. Should fail if not logged in', async () => {
     const response = await request(app).delete(
       `/api/projects/${projectId}/members/${projectMemberId}`
     );
@@ -52,7 +52,7 @@ describe('DELETE /api/projects/:id/members/:userId', () => {
     expect(response.body.error.code).toBe('UNAUTHORIZED');
   });
 
-  it('should fail if not project admin', async () => {
+  it('2. Should fail if not project admin', async () => {
     const response = await request(app)
       .delete(`/api/projects/${projectId}/members/${projectMemberId}`)
       .set('Cookie', userCookie);
@@ -61,7 +61,7 @@ describe('DELETE /api/projects/:id/members/:userId', () => {
     expect(response.body.error.code).toBe('FORBIDDEN');
   });
 
-  it('should fail if user not a member', async () => {
+  it('3. Should fail if user not a member', async () => {
     const response = await request(app)
       .delete(`/api/projects/${projectId}/members/invaliduserid123`)
       .set('Cookie', adminCookie);
@@ -70,7 +70,7 @@ describe('DELETE /api/projects/:id/members/:userId', () => {
     expect(response.body.error.code).toBe('NOT_FOUND');
   });
 
-  it('should remove member successfully as global admin', async () => {
+  it('4. Should remove member successfully as global admin', async () => {
     const response = await request(app)
       .delete(`/api/projects/${projectId}/members/${projectMemberId}`)
       .set('Cookie', adminCookie);
@@ -79,7 +79,7 @@ describe('DELETE /api/projects/:id/members/:userId', () => {
     expect(response.body.message).toBe('User Was Successfully Removed');
   });
 
-  it('should fail if member already removed', async () => {
+  it('5. Should fail if member already removed', async () => {
     const response = await request(app)
       .delete(`/api/projects/${projectId}/members/${projectMemberId}`)
       .set('Cookie', adminCookie);
@@ -88,7 +88,7 @@ describe('DELETE /api/projects/:id/members/:userId', () => {
     expect(response.body.error.code).toBe('NOT_FOUND');
   });
 
-  it('should remove member successfully as project admin', async () => {
+  it('6. Should remove member successfully as project admin', async () => {
     await addMember(projectMemberId, projectId, 'MEMBER');
     const response = await request(app)
       .delete(`/api/projects/${projectId}/members/${projectMemberId}`)

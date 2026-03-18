@@ -17,15 +17,6 @@ router.patch(
   requireProjectRole(['ADMIN', 'MEMBER']),
   async (req: Request, res: Response) => {
     const projectId = req.params.id as string;
-    const project = await prisma.project.findUnique({
-      where: { id: projectId },
-    });
-    if (!project) {
-      res
-        .status(404)
-        .json({ error: { message: 'Project Not Found', code: 'NOT_FOUND' } });
-      return;
-    }
 
     const boardId = req.params.boardId as string;
     const board = await prisma.board.findUnique({ where: { id: boardId } });
@@ -33,6 +24,16 @@ router.patch(
       res
         .status(404)
         .json({ error: { message: 'Board Not Found', code: 'NOT_FOUND' } });
+      return;
+    }
+
+    if (board.projectId !== projectId) {
+      res.status(404).json({
+        error: {
+          message: 'Board Not Found',
+          code: 'NOT_FOUND',
+        },
+      });
       return;
     }
 
@@ -45,12 +46,32 @@ router.patch(
       return;
     }
 
+    if (column.boardId !== boardId) {
+      res.status(404).json({
+        error: {
+          message: 'Column Not Found',
+          code: 'NOT_FOUND',
+        },
+      });
+      return;
+    }
+
     const taskId = req.params.taskId as string;
     const task = await prisma.task.findUnique({ where: { id: taskId } });
     if (!task) {
       res
         .status(404)
         .json({ error: { message: 'Task Not Found', code: 'NOT_FOUND' } });
+      return;
+    }
+
+    if (task.columnId !== columnId) {
+      res.status(404).json({
+        error: {
+          message: 'Task Not Found',
+          code: 'NOT_FOUND',
+        },
+      });
       return;
     }
 
@@ -76,24 +97,49 @@ router.patch(
       return;
     }
 
-    if (parentId) {
-      const parent = await prisma.task.findUnique({ where: { id: parentId } });
-
-      if (!parent) {
-        res.status(400).json({
-          error: { message: 'Parent Task Not Found', code: 'BAD_REQUEST' },
-        });
-        return;
-      }
-
-      if (parent.type !== 'STORY') {
+    if (parentId !== undefined) {
+      if (parentId === taskId) {
         res.status(400).json({
           error: {
-            message: 'Parent Task Must be a Story',
+            message: 'A Task Cannot be Its Own Parent',
             code: 'BAD_REQUEST',
           },
         });
         return;
+      }
+
+      if (parentId !== null) {
+        const parent = await prisma.task.findUnique({
+          where: { id: parentId },
+          include: { column: true },
+        });
+
+        if (!parent) {
+          res.status(400).json({
+            error: { message: 'Parent Task Not Found', code: 'BAD_REQUEST' },
+          });
+          return;
+        }
+
+        if (parent.type !== 'STORY') {
+          res.status(400).json({
+            error: {
+              message: 'Parent Task Must be a Story',
+              code: 'BAD_REQUEST',
+            },
+          });
+          return;
+        }
+
+        if (parent.column.boardId !== boardId) {
+          res.status(400).json({
+            error: {
+              message: 'Parent Task Must Be On The Same Board',
+              code: 'BAD_REQUEST',
+            },
+          });
+          return;
+        }
       }
     }
 
@@ -108,20 +154,7 @@ router.patch(
       if (!member) {
         res.status(400).json({
           error: {
-            message: 'Assignee Must Be a Project "ADMIN" or "MEMBER',
-            code: 'BAD_REQUEST',
-          },
-        });
-        return;
-      }
-    }
-
-    if (dueDate) {
-      const due = new Date(dueDate);
-      if (due <= new Date()) {
-        res.status(400).json({
-          error: {
-            message: 'Due date must be in the future',
+            message: 'Assignee Must Be a Project "ADMIN" or "MEMBER"',
             code: 'BAD_REQUEST',
           },
         });
@@ -140,8 +173,8 @@ router.patch(
       dueDate?: Date;
       columnId?: string;
       parentId?: string;
-      resolvedAt?: Date;
-      closedAt?: Date;
+      resolvedAt?: Date | null;
+      closedAt?: Date | null;
     } = {
       title,
       description,
@@ -154,55 +187,89 @@ router.patch(
       parentId,
     };
 
-    if (status === 'CLOSED') {
-      updatedData.closedAt = new Date();
+    if (dueDate) {
+      const due = new Date(dueDate);
+      if (isNaN(due.getTime())) {
+        res.status(400).json({
+          error: { message: 'Invalid Date Format', code: 'BAD_REQUEST' },
+        });
+        return;
+      }
+      if (due <= new Date()) {
+        res.status(400).json({
+          error: {
+            message: 'Due Date Must Be In The Future',
+            code: 'BAD_REQUEST',
+          },
+        });
+        return;
+      }
+      updatedData.dueDate = due;
     }
+
     if (status) {
       const newColumn = await prisma.column.findFirst({
         where: { boardId, name: status },
       });
-      if (newColumn) {
-        const taskCount = await prisma.task.count({
-          where: { columnId: newColumn.id },
-        });
-        if (newColumn.wipLimit && taskCount >= newColumn.wipLimit) {
-          res.status(400).json({
-            error: {
-              message: 'WIP limit reached',
-              code: 'WIP_LIMIT_REACHED',
-            },
-          });
-          return;
-        }
 
-        if (
-          Math.abs(column!.order - newColumn.order) !== 1 &&
-          column.name !== 'CLOSED' &&
-          newColumn.name !== 'CLOSED'
-        ) {
-          res.status(400).json({
-            error: {
-              message:
-                'This Column Transition is Not Allowed. Can Only Move to Adjacent Columns',
-              code: 'INVALID_TRANSITION',
-            },
-          });
-          return;
-        }
-        updatedData.columnId = newColumn.id;
-      } else {
+      if (!newColumn) {
         res
           .status(404)
           .json({ error: { message: 'Column Not Found', code: 'NOT_FOUND' } });
         return;
       }
+      const taskCount = await prisma.task.count({
+        where: { columnId: newColumn.id },
+      });
+      if (
+        newColumn.wipLimit &&
+        taskCount >= newColumn.wipLimit &&
+        newColumn.id !== task.columnId
+      ) {
+        res.status(400).json({
+          error: {
+            message: 'WIP limit reached',
+            code: 'WIP_LIMIT_REACHED',
+          },
+        });
+        return;
+      }
+
+      if (
+        Math.abs(column!.order - newColumn.order) !== 1 &&
+        column.name !== 'CLOSED' &&
+        newColumn.name !== 'CLOSED' &&
+        column.id !== newColumn.id
+      ) {
+        res.status(400).json({
+          error: {
+            message:
+              'This Column Transition is Not Allowed. Can Only Move to Adjacent Columns',
+            code: 'INVALID_TRANSITION',
+          },
+        });
+        return;
+      }
+      updatedData.columnId = newColumn.id;
+      updatedData.resolvedAt =
+        status === 'DONE'
+          ? new Date()
+          : task.status === 'DONE'
+            ? null
+            : undefined;
+      updatedData.closedAt =
+        status === 'CLOSED'
+          ? new Date()
+          : task.status === 'CLOSED'
+            ? null
+            : undefined;
 
       if (task.type === 'STORY') {
         const expectedStatus = await getExpectedStoryStatus(taskId);
         if (expectedStatus && status !== expectedStatus) {
           res.status(400).json({
             error: {
-              message: 'Story status is inconsistent with children',
+              message: 'Story Status is Inconsistent With Children',
               code: 'INVALID_STATUS',
             },
           });
@@ -211,62 +278,79 @@ router.patch(
       }
     }
 
-    if (status === 'DONE') {
-      updatedData.resolvedAt = new Date();
+    if (type && type !== 'STORY' && task.type === 'STORY') {
+      const childCount = await prisma.task.count({
+        where: { parentId: taskId },
+      });
+      if (childCount > 0) {
+        res.status(400).json({
+          error: {
+            message: 'Cannot Change Type to TASK While Subtasks Exist',
+            code: 'BAD_REQUEST',
+          },
+        });
+        return;
+      }
     }
 
-    const updated_task = await prisma.task.update({
+    const updatedTask = await prisma.task.update({
       where: { id: taskId },
       data: updatedData,
     });
 
-    if (task.status !== updated_task.status) {
-      if (updated_task.assigneeId) {
+    if (task.status !== updatedTask.status) {
+      await auditLog(
+        taskId,
+        req.userId!,
+        'STATUS_CHANGED',
+        task.status,
+        updatedTask.status
+      );
+
+      if (updatedTask.assigneeId) {
         await createNotification(
-          updated_task.assigneeId,
+          updatedTask.assigneeId,
           'Task Status Has Been Updated',
           taskId
         );
       }
     }
 
-    if (task.assigneeId !== updated_task.assigneeId) {
+    if (task.assigneeId !== updatedTask.assigneeId) {
       await auditLog(
         taskId,
         req.userId!,
-        'ASIGNEE_CHANGED',
+        'ASSIGNEE_CHANGED',
         task.assigneeId ?? 'none',
-        updated_task.assigneeId ?? 'none'
+        updatedTask.assigneeId ?? 'none'
       );
 
-      if (updated_task.assigneeId) {
+      if (updatedTask.assigneeId) {
         await createNotification(
-          updated_task.assigneeId,
+          updatedTask.assigneeId,
           'You Have Been Assigned a Task',
           taskId
         );
       }
     }
 
-    if (updated_task.parentId) {
-      const expectedStatus = await getExpectedStoryStatus(
-        updated_task.parentId
-      );
+    if (updatedTask.parentId) {
+      const expectedStatus = await getExpectedStoryStatus(updatedTask.parentId);
 
       if (expectedStatus) {
         const storyTask = await prisma.task.findUnique({
-          where: { id: updated_task.parentId },
+          where: { id: updatedTask.parentId },
         });
         const oldStoryStatus = storyTask!.status;
 
         await prisma.task.update({
-          where: { id: updated_task.parentId },
+          where: { id: updatedTask.parentId },
           data: { status: expectedStatus },
         });
 
         if (oldStoryStatus !== expectedStatus) {
           await auditLog(
-            updated_task.parentId,
+            updatedTask.parentId,
             req.userId!,
             'STATUS_CHANGED',
             oldStoryStatus,
@@ -276,7 +360,31 @@ router.patch(
       }
     }
 
-    res.status(200).json(updated_task);
+    if (task.parentId && task.parentId !== updatedTask.parentId) {
+      const oldExpected = await getExpectedStoryStatus(task.parentId);
+      if (oldExpected) {
+        const storyTask = await prisma.task.findUnique({
+          where: { id: task.parentId },
+        });
+        const oldStoryStatus = storyTask!.status;
+
+        await prisma.task.update({
+          where: { id: task.parentId },
+          data: { status: oldExpected },
+        });
+
+        if (oldStoryStatus !== oldExpected) {
+          await auditLog(
+            task.parentId,
+            req.userId!,
+            'STATUS_CHANGED',
+            oldStoryStatus,
+            oldExpected
+          );
+        }
+      }
+    }
+    res.status(200).json(updatedTask);
   }
 );
 

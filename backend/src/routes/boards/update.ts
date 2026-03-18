@@ -11,15 +11,6 @@ router.patch(
   requireProjectRole(['ADMIN']),
   async (req: Request, res: Response) => {
     const projectId = req.params.id as string;
-    const project = await prisma.project.findUnique({
-      where: { id: projectId },
-    });
-    if (!project) {
-      res
-        .status(404)
-        .json({ error: { message: 'Project Not Found', code: 'NOT_FOUND' } });
-      return;
-    }
 
     const boardId = req.params.boardId as string;
     const board = await prisma.board.findUnique({ where: { id: boardId } });
@@ -30,20 +21,33 @@ router.patch(
       return;
     }
 
-    const name = req.body.name;
-    if (!name) {
-      res
-        .status(400)
-        .json({ error: { message: 'Name is Required', code: 'BAD_REQUEST' } });
+    if (board.projectId !== projectId) {
+      res.status(404).json({
+        error: {
+          message: 'Board Not Found',
+          code: 'NOT_FOUND',
+        },
+      });
       return;
     }
 
-    const updated_board = await prisma.board.update({
+    const name = req.body.name;
+    if (!name || typeof name !== 'string' || !name.trim()) {
+      res.status(400).json({
+        error: {
+          message: 'A Valid Board Name is Required',
+          code: 'BAD_REQUEST',
+        },
+      });
+      return;
+    }
+
+    const updatedBoard = await prisma.board.update({
       where: { id: boardId },
       data: { name },
     });
 
-    res.status(200).json(updated_board);
+    res.status(200).json(updatedBoard);
   }
 );
 

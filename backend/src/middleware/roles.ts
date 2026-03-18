@@ -28,13 +28,24 @@ export const requireGlobalAdmin = async (
 
 export const requireProjectRole = (allowedRoles: string[]) => {
   return async (req: Request, res: Response, next: NextFunction) => {
+    const projectId = req.params.id as string;
+
+    const project = await prisma.project.findUnique({
+      where: { id: projectId },
+    });
+
+    if (!project) {
+      res.status(404).json({
+        error: { message: 'Project Not Found', code: 'NOT_FOUND' },
+      });
+      return;
+    }
+
     const user = await prisma.user.findUnique({ where: { id: req.userId } });
     if (user?.globalRole === 'GLOBAL_ADMIN') {
       next();
       return;
     }
-
-    const projectId = req.params.id as string;
 
     const member = await prisma.projectMember.findFirst({
       where: { userId: req.userId, projectId },

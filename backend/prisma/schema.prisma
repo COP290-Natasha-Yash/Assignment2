@@ -14,11 +14,13 @@ model User {
   username          String        @unique
   password          String
   avatar            String?
-  role              String        @default("MEMBER")
   createdAt         DateTime      @default(now())
   updatedAt         DateTime      @updatedAt
   refreshToken      String?       @unique
   globalRole        String        @default("USER")
+  projects          ProjectMember[] @relation("UserProjects")
+  assignedTasks     Task[]        @relation("AssignedTasks")
+  reportedTasks     Task[]        @relation("ReportedTasks")
 }
 
 
@@ -30,14 +32,14 @@ model Project {
   createdAt         DateTime      @default(now())
   updatedAt         DateTime      @updatedAt
   boards            Board[]
-  members            ProjectMember[]
+  members           ProjectMember[]
 }
 
 
 model Board {
   id                String        @id @default(cuid())
   name              String
-  projectId         String
+  projectId         String        
   project           Project       @relation(fields: [projectId], references: [id])
   createdAt         DateTime      @default(now())
   updatedAt         DateTime      @updatedAt
@@ -48,13 +50,14 @@ model Board {
 model Column {
   id                String        @id @default(cuid())
   name              String
-  order             Int
+  order             Int           
   wipLimit          Int?
-  boardId           String
+  boardId           String        
   board             Board         @relation(fields: [boardId], references: [id], onDelete : Cascade)
   createdAt         DateTime      @default(now())
   updatedAt         DateTime      @updatedAt
   tasks             Task[]
+  @@unique([boardId,order])
 }
 
 
@@ -66,7 +69,9 @@ model Task {
   priority          String        @default("MEDIUM")
   type              String        @default("TASK")
   assigneeId        String?
+  assignee          User?       @relation("AssignedTasks", fields: [assigneeId], references: [id])
   reporterId        String
+  reporter          User        @relation("ReportedTasks", fields: [reporterId], references: [id])
   dueDate           DateTime?
   columnId          String
   column            Column        @relation(fields: [columnId], references: [id], onDelete: Cascade)
@@ -121,6 +126,7 @@ model Notification {
 model ProjectMember {
   id                String        @id @default(cuid())
   userId            String
+  user              User          @relation("UserProjects",fields: [userId], references: [id], onDelete: Cascade)
   projectId         String
   role              String        @default("VIEWER")
   project           Project       @relation(fields: [projectId], references: [id])

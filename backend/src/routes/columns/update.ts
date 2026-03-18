@@ -11,15 +11,6 @@ router.patch(
   requireProjectRole(['ADMIN']),
   async (req: Request, res: Response) => {
     const projectId = req.params.id as string;
-    const project = await prisma.project.findUnique({
-      where: { id: projectId },
-    });
-    if (!project) {
-      res
-        .status(404)
-        .json({ error: { message: 'Project Not Found', code: 'NOT_FOUND' } });
-      return;
-    }
 
     const boardId = req.params.boardId as string;
     const board = await prisma.board.findUnique({ where: { id: boardId } });
@@ -27,6 +18,16 @@ router.patch(
       res
         .status(404)
         .json({ error: { message: 'Board Not Found', code: 'NOT_FOUND' } });
+      return;
+    }
+
+    if (board.projectId !== projectId) {
+      res.status(404).json({
+        error: {
+          message: 'Board Not Found',
+          code: 'NOT_FOUND',
+        },
+      });
       return;
     }
 
@@ -39,35 +40,58 @@ router.patch(
       return;
     }
 
-    const { name, order, wipLimit } = req.body;
-
-    if (!name) {
-      res
-        .status(400)
-        .json({ error: { message: 'Name is required', code: 'BAD_REQUEST' } });
+    if (column.boardId !== boardId) {
+      res.status(404).json({
+        error: {
+          message: 'Column Not Found',
+          code: 'NOT_FOUND',
+        },
+      });
       return;
     }
 
-    if (!order) {
-      res
-        .status(400)
-        .json({ error: { message: 'Order is required', code: 'BAD_REQUEST' } });
+    const { name, wipLimit } = req.body;
+
+    if (name !== undefined && (typeof name !== 'string' || !name.trim())) {
+      res.status(400).json({
+        error: { message: 'Name Cannot be Empty', code: 'BAD_REQUEST' },
+      });
       return;
     }
 
-    if (typeof order !== 'number') {
-      res
-        .status(400)
-        .json({ error: { message: 'Invalid Order', code: 'BAD_REQUEST' } });
-      return;
+    if (wipLimit !== undefined && wipLimit !== null) {
+      if (
+        typeof wipLimit !== 'number' ||
+        wipLimit < 0 ||
+        !Number.isInteger(wipLimit)
+      ) {
+        res.status(400).json({
+          error: {
+            message: 'WIP Limit must be a positive integer or null',
+            code: 'BAD_REQUEST',
+          },
+        });
+        return;
+      }
+
+      const taskCount = await prisma.task.count({ where: { columnId } });
+      if (wipLimit < taskCount) {
+        res.status(400).json({
+          error: {
+            message: 'WIP Limit Must Be Set Greater Than Existing No. of tasks',
+            code: 'BAD_REQUEST',
+          },
+        });
+        return;
+      }
     }
 
-    const updated_column = await prisma.column.update({
+    const updatedColumn = await prisma.column.update({
       where: { id: columnId },
-      data: { name, order, wipLimit },
+      data: { name, wipLimit },
     });
 
-    res.status(200).json(updated_column);
+    res.status(200).json(updatedColumn);
   }
 );
 

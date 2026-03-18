@@ -8,7 +8,7 @@ import {
   seedProject,
   addMember,
   loginUser,
-} from '../00_helpers/testHelpers';
+} from '../helpers/testHelpers';
 
 let adminCookie: string;
 let projectAdminCookie: string;
@@ -43,7 +43,7 @@ beforeAll(async () => {
 });
 
 describe('PATCH /api/projects/:id/members/:userId', () => {
-  it('should fail if not logged in', async () => {
+  it('1. Should fail if not logged in', async () => {
     const response = await request(app)
       .patch(`/api/projects/${projectId}/members/${projectMemberId}`)
       .send({ role: 'ADMIN' });
@@ -51,7 +51,7 @@ describe('PATCH /api/projects/:id/members/:userId', () => {
     expect(response.body.error.code).toBe('UNAUTHORIZED');
   });
 
-  it('should fail if not project admin', async () => {
+  it('2. Should fail if not project admin', async () => {
     const response = await request(app)
       .patch(`/api/projects/${projectId}/members/${projectMemberId}`)
       .send({ role: 'ADMIN' })
@@ -60,7 +60,7 @@ describe('PATCH /api/projects/:id/members/:userId', () => {
     expect(response.body.error.code).toBe('FORBIDDEN');
   });
 
-  it('should fail if role is invalid', async () => {
+  it('3. Should fail if role is invalid', async () => {
     const response = await request(app)
       .patch(`/api/projects/${projectId}/members/${projectMemberId}`)
       .send({ role: 'INVALID_ROLE' })
@@ -69,7 +69,7 @@ describe('PATCH /api/projects/:id/members/:userId', () => {
     expect(response.body.error.code).toBe('BAD_REQUEST');
   });
 
-  it('should fail if role is missing', async () => {
+  it('4. Should fail if role is missing', async () => {
     const response = await request(app)
       .patch(`/api/projects/${projectId}/members/${projectMemberId}`)
       .send({})
@@ -78,7 +78,7 @@ describe('PATCH /api/projects/:id/members/:userId', () => {
     expect(response.body.error.code).toBe('BAD_REQUEST');
   });
 
-  it('should fail if user not a member', async () => {
+  it('5. Should fail if user not a member', async () => {
     const response = await request(app)
       .patch(`/api/projects/${projectId}/members/invaliduserid123`)
       .send({ role: 'ADMIN' })
@@ -87,7 +87,7 @@ describe('PATCH /api/projects/:id/members/:userId', () => {
     expect(response.body.error.code).toBe('NOT_FOUND');
   });
 
-  it('should update role successfully as global admin', async () => {
+  it('6. Should update role successfully as global admin', async () => {
     const response = await request(app)
       .patch(`/api/projects/${projectId}/members/${projectMemberId}`)
       .send({ role: 'ADMIN' })
@@ -96,7 +96,7 @@ describe('PATCH /api/projects/:id/members/:userId', () => {
     expect(response.body.role).toBe('ADMIN');
   });
 
-  it('should update role successfully as project admin', async () => {
+  it('7. Should update role successfully as project admin', async () => {
     const response = await request(app)
       .patch(`/api/projects/${projectId}/members/${projectMemberId}`)
       .send({ role: 'MEMBER' })

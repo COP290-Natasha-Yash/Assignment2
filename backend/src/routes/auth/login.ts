@@ -10,22 +10,37 @@ const JWT_SECRET = process.env.JWT_SECRET || 'supersecret';
 router.post('/login', async (req: Request, res: Response) => {
   const { email, username, password } = req.body;
 
-  if (typeof password !== 'string') {
+  const cleanEmail = typeof email === 'string' ? email.trim() : undefined;
+  const cleanUsername =
+    typeof username === 'string' ? username.trim() : undefined;
+
+  // 1. Validation
+  if (
+    (!cleanEmail && !cleanUsername) ||
+    typeof password !== 'string' ||
+    !password.trim()
+  ) {
     res.status(400).json({
-      error: { message: 'Invalid Password Format', code: 'BAD_REQUEST' },
+      error: {
+        message: 'Email/Username and Password are required',
+        code: 'BAD_REQUEST',
+      },
     });
     return;
   }
 
-  if ((!email?.trim() && !username?.trim()) || !password?.trim()) {
-    res.status(400).json({
-      error: { message: 'All Fields are Required.', code: 'BAD_REQUEST' },
-    });
-    return;
+  let userQuery = {};
+
+  if (cleanEmail && cleanUsername) {
+    userQuery = { email: cleanEmail, username: cleanUsername };
+  } else if (cleanEmail) {
+    userQuery = { email: cleanEmail };
+  } else {
+    userQuery = { username: cleanUsername };
   }
 
   const user = await prisma.user.findFirst({
-    where: { OR: [{ email }, { username }] },
+    where: userQuery,
   });
 
   if (!user) {
@@ -69,8 +84,9 @@ router.post('/login', async (req: Request, res: Response) => {
     user: {
       id: user.id,
       name: user.name,
+      username: user.username,
       email: user.email,
-      role: user.role,
+      role: user.globalRole,
     },
   });
 });

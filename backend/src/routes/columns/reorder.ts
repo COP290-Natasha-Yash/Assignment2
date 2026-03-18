@@ -13,21 +13,12 @@ router.patch(
     const columns = req.body;
     if (!columns || !Array.isArray(columns)) {
       res.status(400).json({
-        error: { message: 'Columns array is required', code: 'BAD_REQUEST' },
+        error: { message: 'Columns Array is Required', code: 'BAD_REQUEST' },
       });
       return;
     }
 
     const projectId = req.params.id as string;
-    const project = await prisma.project.findUnique({
-      where: { id: projectId },
-    });
-    if (!project) {
-      res
-        .status(404)
-        .json({ error: { message: 'Project Not Found', code: 'NOT_FOUND' } });
-      return;
-    }
 
     const boardId = req.params.boardId as string;
     const board = await prisma.board.findUnique({ where: { id: boardId } });
@@ -38,13 +29,33 @@ router.patch(
       return;
     }
 
-    for (let i = 0; i < columns.length; i++) {
-      const { id, order } = columns[i];
-
-      await prisma.column.update({ where: { id }, data: { order } });
+    if (board.projectId !== projectId) {
+      res.status(404).json({
+        error: {
+          message: 'Board Not Found',
+          code: 'NOT_FOUND',
+        },
+      });
+      return;
     }
 
-    res.status(200).json({ message: 'Columns reordered successfully' });
+    await prisma.$transaction(async (tx) => {
+      for (const col of columns) {
+        await tx.column.update({
+          where: { id: col.id },
+          data: { order: -col.order },
+        });
+      }
+
+      for (const col of columns) {
+        await tx.column.update({
+          where: { id: col.id },
+          data: { order: col.order },
+        });
+      }
+    });
+
+    res.status(200).json({ message: 'Columns Reordered Successfully' });
   }
 );
 

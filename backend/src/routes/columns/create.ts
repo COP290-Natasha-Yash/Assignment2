@@ -11,15 +11,6 @@ router.post(
   requireProjectRole(['ADMIN']),
   async (req: Request, res: Response) => {
     const projectId = req.params.id as string;
-    const project = await prisma.project.findUnique({
-      where: { id: projectId },
-    });
-    if (!project) {
-      res
-        .status(404)
-        .json({ error: { message: 'Project not found', code: 'NOT_FOUND' } });
-      return;
-    }
 
     const boardId = req.params.boardId as string;
     const board = await prisma.board.findUnique({ where: { id: boardId } });
@@ -30,28 +21,47 @@ router.post(
       return;
     }
 
-    const { name, order, wipLimit } = req.body;
-
-    if (!name) {
-      res
-        .status(400)
-        .json({ error: { message: 'Name is Required', code: 'BAD_REQUEST' } });
+    if (board.projectId !== projectId) {
+      res.status(404).json({
+        error: {
+          message: 'Board Not Found',
+          code: 'NOT_FOUND',
+        },
+      });
       return;
     }
 
-    if (!order) {
-      res
-        .status(400)
-        .json({ error: { message: 'Order is Required', code: 'BAD_REQUEST' } });
+    const { name, wipLimit } = req.body;
+
+    if (!name || typeof name !== 'string' || !name.trim()) {
+      res.status(400).json({
+        error: {
+          message: 'A Valid Board Name is Required',
+          code: 'BAD_REQUEST',
+        },
+      });
       return;
     }
 
-    if (typeof order !== 'number') {
-      res
-        .status(400)
-        .json({ error: { message: 'Invalid Order', code: 'BAD_REQUEST' } });
-      return;
+    if (wipLimit !== undefined && wipLimit !== null) {
+      if (
+        typeof wipLimit !== 'number' ||
+        wipLimit < 0 ||
+        !Number.isInteger(wipLimit)
+      ) {
+        res.status(400).json({
+          error: {
+            message: 'WIP Limit Must be a Positive Integer or Null',
+            code: 'BAD_REQUEST',
+          },
+        });
+        return;
+      }
     }
+
+    const existingColumns = await prisma.column.count({ where: { boardId } });
+
+    const order = existingColumns + 1;
 
     const column = await prisma.column.create({
       data: { name, order, wipLimit, boardId },

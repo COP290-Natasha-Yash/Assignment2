@@ -50,9 +50,27 @@ export async function seedBoard(
   projectId: string,
   name: string = 'Test Board'
 ) {
-  return await prisma.board.create({
+  const board = await prisma.board.create({
     data: { name, projectId },
   });
+
+  const defaultColumns = [
+    'TO_DO',
+    'IN_PROGRESS',
+    'IN_REVIEW',
+    'DONE',
+    'CLOSED',
+  ];
+
+  await prisma.column.createMany({
+    data: defaultColumns.map((name, index) => ({
+      name,
+      order: index + 1,
+      boardId: board.id,
+    })),
+  });
+
+  return board;
 }
 
 export async function seedColumn(boardId: string, name: string, order: number) {
