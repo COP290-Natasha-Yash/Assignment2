@@ -9,7 +9,7 @@ const router = express.Router();
 router.post('/', requireGlobalAdmin, async (req: Request, res: Response) => {
   const { name, description } = req.body;
 
-  if (!name?.trim()) {
+  if (!name || typeof name!=='string' || !name.trim()) {
     res
       .status(400)
       .json({ error: { message: 'Name is Required', code: 'BAD_REQUEST' } });

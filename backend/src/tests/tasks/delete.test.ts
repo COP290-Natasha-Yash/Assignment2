@@ -6,6 +6,8 @@ import {
   seedAdmin,
   seedProject,
   seedBoard,
+  seedColumn,
+  seedTask,
   addMember,
   loginUser,
   seedUser,
@@ -35,15 +37,17 @@ beforeAll(async () => {
   adminCookie = await loginUser('admin', 'admin123');
 });
 
+beforeEach(async () => {
+  await prisma.task.deleteMany();
+});
+
 afterAll(async () => {
   await clearDatabase();
 });
 
 describe('DELETE /api/projects/:id/boards/:boardId/columns/:columnId/tasks/:taskId', () => {
-  it('1. Sould successfully delete a single task', async () => {
-    const task = await prisma.task.create({
-      data: { title: 'Solo Task', columnId, reporterId: adminId },
-    });
+  it('1. Should successfully delete a single task', async () => {
+    const task = await seedTask(columnId, adminId, 'Solo Task');
 
     const res = await request(app)
       .delete(
@@ -60,33 +64,9 @@ describe('DELETE /api/projects/:id/boards/:boardId/columns/:columnId/tasks/:task
   });
 
   it('2. Should delete a Story and all its Subtasks via database cascade', async () => {
-    // 1. Setup Hierarchy
-    const story = await prisma.task.create({
-      data: {
-        title: 'Parent Story',
-        type: 'STORY',
-        columnId,
-        reporterId: adminId,
-      },
-    });
-    const sub1 = await prisma.task.create({
-      data: {
-        title: 'Sub 1',
-        type: 'TASK',
-        parentId: story.id,
-        columnId,
-        reporterId: adminId,
-      },
-    });
-    const sub2 = await prisma.task.create({
-      data: {
-        title: 'Sub 2',
-        type: 'TASK',
-        parentId: story.id,
-        columnId,
-        reporterId: adminId,
-      },
-    });
+    const story = await seedTask(columnId, adminId, 'Parent Story', 'STORY');
+    const sub1 = await seedTask(columnId, adminId, 'Sub 1', 'TASK', story.id);
+    const sub2 = await seedTask(columnId, adminId, 'Sub 2', 'TASK', story.id);
 
     // 2. Delete Parent
     const res = await request(app)
@@ -105,14 +85,8 @@ describe('DELETE /api/projects/:id/boards/:boardId/columns/:columnId/tasks/:task
   });
 
   it('3. Should return 404 if the task is in the wrong column path', async () => {
-    const task = await prisma.task.create({
-      data: { title: 'Misplaced Task', columnId, reporterId: adminId },
-    });
-
-    // Create a second column on the same board
-    const otherCol = await prisma.column.create({
-      data: { name: 'Done', order: 10, boardId },
-    });
+    const task = await seedTask(columnId, adminId, 'Misplaced Task');
+    const otherCol = await seedColumn(boardId, 'Done', 10);
 
     const res = await request(app)
       .delete(
@@ -131,13 +105,7 @@ describe('DELETE /api/projects/:id/boards/:boardId/columns/:columnId/tasks/:task
       where: { boardId: otherBoard.id },
     });
 
-    const task = await prisma.task.create({
-      data: {
-        title: 'Project B Task',
-        columnId: otherCol!.id,
-        reporterId: adminId,
-      },
-    });
+    const task = await seedTask(otherCol!.id, adminId, 'Project B Task');
 
     // Try to access task using Project A's ID in the URL
     const res = await request(app)
@@ -151,10 +119,7 @@ describe('DELETE /api/projects/:id/boards/:boardId/columns/:columnId/tasks/:task
   });
 
   it('5. Should return 404 if the task has already been deleted', async () => {
-    // 1. Create a task
-    const task = await prisma.task.create({
-      data: { title: 'Ghost Task', columnId, reporterId: adminId },
-    });
+    const task = await seedTask(columnId, adminId, 'Ghost Task');
 
     // 2. Delete it once
     await request(app)
@@ -179,9 +144,7 @@ describe('DELETE /api/projects/:id/boards/:boardId/columns/:columnId/tasks/:task
     await addMember(viewer.id, projectId, 'VIEWER');
     const viewerCookie = await loginUser('viewer_u', 'pass123');
 
-    const task = await prisma.task.create({
-      data: { title: 'Safe Task', columnId, reporterId: adminId },
-    });
+    const task = await seedTask(columnId, adminId, 'Safe Task');
 
     const res = await request(app)
       .delete(

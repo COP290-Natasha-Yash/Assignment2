@@ -28,7 +28,7 @@ router.post(
     }
 
     const content = req.body.content;
-    if (!content || !content.trim()) {
+    if (!content || typeof content !== 'string' || !content.trim()) {
       res.status(400).json({
         error: { message: 'Comment is Required', code: 'BAD_REQUEST' },
       });
@@ -39,6 +39,15 @@ router.post(
 
     const comment = await prisma.comment.create({
       data: { content, taskId, authorId },
+      include: {
+        author: {
+          select: {
+            id: true,
+            username: true,
+            name: true,
+          },
+        },
+      },
     });
     await auditLog(taskId, authorId, 'COMMENT_ADDED', undefined, content);
 

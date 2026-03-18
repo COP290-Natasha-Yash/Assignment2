@@ -6,8 +6,10 @@ import {
   seedAdmin,
   seedProject,
   seedBoard,
+  seedColumn, 
   addMember,
   loginUser,
+  seedTask,
 } from '../helpers/testHelpers';
 
 let adminCookie: string;
@@ -31,12 +33,8 @@ beforeAll(async () => {
   const column = await prisma.column.findFirst({ where: { boardId } });
   columnId = column!.id;
 
-  await prisma.task.createMany({
-    data: [
-      { title: 'Task 1', columnId, reporterId: adminId, status: column!.name },
-      { title: 'Task 2', columnId, reporterId: adminId, status: column!.name },
-    ],
-  });
+  (await seedTask(columnId, adminId, 'Task 1'),
+    await seedTask(columnId, adminId, 'Task 2'));
 
   adminCookie = await loginUser('admin', 'admin123');
 });
@@ -94,9 +92,7 @@ describe('GET /api/projects/:id/boards/:boardId/columns/:columnId/tasks', () => 
   });
 
   it('4. Should return an empty array if the column has no tasks', async () => {
-    const emptyCol = await prisma.column.create({
-      data: { name: 'Empty', order: 10, boardId },
-    });
+    const emptyCol = await seedColumn(boardId, 'Empty', 10);
 
     const res = await request(app)
       .get(

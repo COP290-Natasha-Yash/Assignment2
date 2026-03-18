@@ -6,21 +6,28 @@ import {
   seedAdmin,
   seedProject,
   seedBoard,
+  seedColumn, 
+  seedTask,   
   addMember,
   loginUser,
 } from '../helpers/testHelpers';
 
 let adminCookie: string;
 let adminId: string;
-let projectId: string, boardId: string;
-let col0Id: string, col1Id: string, col2Id: string, closedColId: string;
+let projectId: string;
+let boardId: string;
+let col0Id: string;
+let col1Id: string;
+let col2Id: string;
+let closedColId: string;
 
 beforeAll(async () => {
   await clearDatabase();
   const admin = await seedAdmin();
   adminId = admin.id;
 
-  projectId = (await seedProject('Move Logic Project')).id;
+  const project = await seedProject('Move Logic Project');
+  projectId = project.id;
   await addMember(adminId, projectId, 'ADMIN');
 
   const board = await seedBoard(projectId, 'Kanban Board');
@@ -41,15 +48,19 @@ beforeAll(async () => {
     where: { id: col1Id },
     data: { name: 'IN_PROGRESS' },
   });
-  await prisma.column.update({ where: { id: col2Id }, data: { name: 'DONE' } });
-
-  // Create a specific CLOSED column to test the transition exception
-  const closedCol = await prisma.column.create({
-    data: { name: 'CLOSED', order: 10, boardId },
+  await prisma.column.update({ 
+    where: { id: col2Id }, 
+    data: { name: 'DONE' } 
   });
+
+  const closedCol = await seedColumn(boardId, 'CLOSED', 10);
   closedColId = closedCol.id;
 
   adminCookie = await loginUser('admin', 'admin123');
+});
+
+beforeEach(async () => {
+  await prisma.task.deleteMany();
 });
 
 afterAll(async () => {
@@ -57,20 +68,12 @@ afterAll(async () => {
 });
 
 describe('PATCH /api/projects/:id/boards/:boardId/tasks/:taskId/move', () => {
+  
   it('1. Should successfully move a task to an adjacent column and sync status', async () => {
-    const task = await prisma.task.create({
-      data: {
-        title: 'Valid Move',
-        columnId: col0Id,
-        reporterId: adminId,
-        status: 'TODO',
-      },
-    });
+    const task = await seedTask(col0Id, adminId, 'Valid Move');
 
     const res = await request(app)
-      .patch(
-        `/api/projects/${projectId}/boards/${boardId}/tasks/${task.id}/move`
-      )
+      .patch(`/api/projects/${projectId}/boards/${boardId}/tasks/${task.id}/move`)
       .set('Cookie', adminCookie)
       .send({ columnId: col1Id });
 
@@ -80,37 +83,22 @@ describe('PATCH /api/projects/:id/boards/:boardId/tasks/:taskId/move', () => {
   });
 
   it('2. Should block moving a task of type STORY', async () => {
-    const story = await prisma.task.create({
-      data: {
-        title: 'Immovable Story',
-        type: 'STORY',
-        columnId: col0Id,
-        reporterId: adminId,
-      },
-    });
+    const story = await seedTask(col0Id, adminId, 'Immovable Story', 'STORY');
 
     const res = await request(app)
-      .patch(
-        `/api/projects/${projectId}/boards/${boardId}/tasks/${story.id}/move`
-      )
+      .patch(`/api/projects/${projectId}/boards/${boardId}/tasks/${story.id}/move`)
       .set('Cookie', adminCookie)
       .send({ columnId: col1Id });
 
     expect(res.status).toBe(400);
-    expect(res.body.error.message).toContain(
-      '"STORY" Type task is NOT Movable'
-    );
+    expect(res.body.error.message).toContain('"STORY" Type task is NOT Movable');
   });
 
   it('3. Should enforce the adjacency rule (Order 0 cannot jump to Order 2)', async () => {
-    const task = await prisma.task.create({
-      data: { title: 'Long Jumper', columnId: col0Id, reporterId: adminId },
-    });
+    const task = await seedTask(col0Id, adminId, 'Long Jumper');
 
     const res = await request(app)
-      .patch(
-        `/api/projects/${projectId}/boards/${boardId}/tasks/${task.id}/move`
-      )
+      .patch(`/api/projects/${projectId}/boards/${boardId}/tasks/${task.id}/move`)
       .set('Cookie', adminCookie)
       .send({ columnId: col2Id });
 
@@ -119,18 +107,10 @@ describe('PATCH /api/projects/:id/boards/:boardId/tasks/:taskId/move', () => {
   });
 
   it('4. Should allow non-adjacent moves IF the destination is the CLOSED column', async () => {
-    const task = await prisma.task.create({
-      data: {
-        title: 'Emergency Shutdown',
-        columnId: col0Id,
-        reporterId: adminId,
-      },
-    });
+    const task = await seedTask(col0Id, adminId, 'Emergency Shutdown');
 
     const res = await request(app)
-      .patch(
-        `/api/projects/${projectId}/boards/${boardId}/tasks/${task.id}/move`
-      )
+      .patch(`/api/projects/${projectId}/boards/${boardId}/tasks/${task.id}/move`)
       .set('Cookie', adminCookie)
       .send({ columnId: closedColId });
 
@@ -145,18 +125,12 @@ describe('PATCH /api/projects/:id/boards/:boardId/tasks/:taskId/move', () => {
       where: { id: col1Id },
       data: { wipLimit: 1 },
     });
-    await prisma.task.create({
-      data: { title: 'Occupant', columnId: col1Id, reporterId: adminId },
-    });
-
-    const task = await prisma.task.create({
-      data: { title: 'Waitlisted', columnId: col0Id, reporterId: adminId },
-    });
+    
+    await seedTask(col1Id, adminId, 'Occupant');
+    const task = await seedTask(col0Id, adminId, 'Waitlisted');
 
     const res = await request(app)
-      .patch(
-        `/api/projects/${projectId}/boards/${boardId}/tasks/${task.id}/move`
-      )
+      .patch(`/api/projects/${projectId}/boards/${boardId}/tasks/${task.id}/move`)
       .set('Cookie', adminCookie)
       .send({ columnId: col1Id });
 
@@ -171,19 +145,11 @@ describe('PATCH /api/projects/:id/boards/:boardId/tasks/:taskId/move', () => {
   });
 
   it('6. Should set resolvedAt when moving to DONE and nullify it when moving out', async () => {
-    const task = await prisma.task.create({
-      data: {
-        title: 'Resolved-Unresolved',
-        columnId: col1Id,
-        reporterId: adminId,
-      },
-    });
+    const task = await seedTask(col1Id, adminId, 'Resolved-Unresolved');
 
     // 1. Move to DONE
     const doneRes = await request(app)
-      .patch(
-        `/api/projects/${projectId}/boards/${boardId}/tasks/${task.id}/move`
-      )
+      .patch(`/api/projects/${projectId}/boards/${boardId}/tasks/${task.id}/move`)
       .set('Cookie', adminCookie)
       .send({ columnId: col2Id });
 
@@ -191,9 +157,7 @@ describe('PATCH /api/projects/:id/boards/:boardId/tasks/:taskId/move', () => {
 
     // 2. Move back to IN_PROGRESS
     const backRes = await request(app)
-      .patch(
-        `/api/projects/${projectId}/boards/${boardId}/tasks/${task.id}/move`
-      )
+      .patch(`/api/projects/${projectId}/boards/${boardId}/tasks/${task.id}/move`)
       .set('Cookie', adminCookie)
       .send({ columnId: col1Id });
 

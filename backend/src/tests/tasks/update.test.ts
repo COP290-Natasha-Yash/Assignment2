@@ -12,8 +12,11 @@ import {
 
 let adminCookie: string;
 let adminId: string;
-let projectId: string, boardId: string;
-let col0Id: string, col1Id: string, col2Id: string;
+let projectId: string;
+let boardId: string;
+let col0Id: string;
+let col1Id: string;
+let col2Id: string;
 
 beforeAll(async () => {
   await clearDatabase();
@@ -39,9 +42,18 @@ beforeAll(async () => {
     where: { id: col1Id },
     data: { name: 'IN_PROGRESS' },
   });
-  await prisma.column.update({ where: { id: col2Id }, data: { name: 'DONE' } });
+  await prisma.column.update({ 
+    where: { id: col2Id }, 
+    data: { name: 'DONE' } 
+  });
 
   adminCookie = await loginUser('admin', 'admin123');
+});
+
+beforeEach(async () => {
+  await prisma.auditLog.deleteMany();
+  await prisma.notification.deleteMany();
+  await prisma.task.deleteMany();
 });
 
 afterAll(async () => {
@@ -49,15 +61,14 @@ afterAll(async () => {
 });
 
 describe('PATCH /api/projects/:id/boards/:boardId/columns/:columnId/tasks/:taskId', () => {
-  it('should generate an audit log and notification when assignee changes', async () => {
+  
+  it('1. should generate an audit log and notification when assignee changes', async () => {
     const task = await prisma.task.create({
       data: { title: 'Assignment Test', columnId: col0Id, reporterId: adminId },
     });
 
     const res = await request(app)
-      .patch(
-        `/api/projects/${projectId}/boards/${boardId}/columns/${col0Id}/tasks/${task.id}`
-      )
+      .patch(`/api/projects/${projectId}/boards/${boardId}/columns/${col0Id}/tasks/${task.id}`)
       .set('Cookie', adminCookie)
       .send({ assigneeId: adminId });
 
@@ -77,7 +88,7 @@ describe('PATCH /api/projects/:id/boards/:boardId/columns/:columnId/tasks/:taskI
     expect(notification?.message).toContain('Assigned');
   });
 
-  it('should set resolvedAt when moving to DONE and nullify it when moving out', async () => {
+  it('2. should set resolvedAt when moving to DONE and nullify it when moving out', async () => {
     const task = await prisma.task.create({
       data: {
         title: 'Timestamp Test',
@@ -87,28 +98,24 @@ describe('PATCH /api/projects/:id/boards/:boardId/columns/:columnId/tasks/:taskI
       },
     });
 
-    // 1. Move to DONE
+    // Move to DONE
     const doneRes = await request(app)
-      .patch(
-        `/api/projects/${projectId}/boards/${boardId}/columns/${col1Id}/tasks/${task.id}`
-      )
+      .patch(`/api/projects/${projectId}/boards/${boardId}/columns/${col1Id}/tasks/${task.id}`)
       .set('Cookie', adminCookie)
       .send({ status: 'DONE' });
 
     expect(doneRes.body.resolvedAt).not.toBeNull();
 
-    // 2. Move back to IN_PROGRESS
+    // Move back to IN_PROGRESS
     const backRes = await request(app)
-      .patch(
-        `/api/projects/${projectId}/boards/${boardId}/columns/${col2Id}/tasks/${task.id}`
-      )
+      .patch(`/api/projects/${projectId}/boards/${boardId}/columns/${col2Id}/tasks/${task.id}`)
       .set('Cookie', adminCookie)
       .send({ status: 'IN_PROGRESS' });
 
     expect(backRes.body.resolvedAt).toBeNull();
   });
 
-  it('should automatically update parent STORY status when child moves', async () => {
+  it('3. should automatically update parent STORY status when child moves', async () => {
     const story = await prisma.task.create({
       data: {
         title: 'Parent Story',
@@ -129,11 +136,8 @@ describe('PATCH /api/projects/:id/boards/:boardId/columns/:columnId/tasks/:taskI
       },
     });
 
-    // Move subtask to IN_PROGRESS
     await request(app)
-      .patch(
-        `/api/projects/${projectId}/boards/${boardId}/columns/${col0Id}/tasks/${subtask.id}`
-      )
+      .patch(`/api/projects/${projectId}/boards/${boardId}/columns/${col0Id}/tasks/${subtask.id}`)
       .set('Cookie', adminCookie)
       .send({ status: 'IN_PROGRESS' });
 
@@ -141,19 +145,16 @@ describe('PATCH /api/projects/:id/boards/:boardId/columns/:columnId/tasks/:taskI
       where: { id: story.id },
     });
 
-    // getExpectedStoryStatus should have flipped this to IN_PROGRESS
     expect(updatedStory?.status).toBe('IN_PROGRESS');
   });
 
-  it('should fail if assignee is not a project member', async () => {
+  it('4. should fail if assignee is not a project member', async () => {
     const task = await prisma.task.create({
       data: { title: 'Security Test', columnId: col0Id, reporterId: adminId },
     });
 
     const res = await request(app)
-      .patch(
-        `/api/projects/${projectId}/boards/${boardId}/columns/${col0Id}/tasks/${task.id}`
-      )
+      .patch(`/api/projects/${projectId}/boards/${boardId}/columns/${col0Id}/tasks/${task.id}`)
       .set('Cookie', adminCookie)
       .send({ assigneeId: 'some-random-id' });
 
@@ -161,12 +162,12 @@ describe('PATCH /api/projects/:id/boards/:boardId/columns/:columnId/tasks/:taskI
     expect(res.body.error.message).toContain('Assignee Must Be a Project');
   });
 
-  it('should NOT trigger WIP limit if moving within the same column', async () => {
-    // 1. Fill column to limit
+  it('5. should NOT trigger WIP limit if moving within the same column', async () => {
     await prisma.column.update({
       where: { id: col1Id },
       data: { wipLimit: 1 },
     });
+    
     const task = await prisma.task.create({
       data: {
         title: 'Solo',
@@ -176,34 +177,28 @@ describe('PATCH /api/projects/:id/boards/:boardId/columns/:columnId/tasks/:taskI
       },
     });
 
-    // 2. Update ONLY the title (columnId stays same)
     const res = await request(app)
-      .patch(
-        `/api/projects/${projectId}/boards/${boardId}/columns/${col1Id}/tasks/${task.id}`
-      )
+      .patch(`/api/projects/${projectId}/boards/${boardId}/columns/${col1Id}/tasks/${task.id}`)
       .set('Cookie', adminCookie)
       .send({ title: 'Updated Title' });
 
-    expect(res.status).toBe(200); // Should pass despite WIP limit
+    expect(res.status).toBe(200); 
   });
 
-  it('should return 400 for an invalid date format', async () => {
+  it('6. should return 400 for an invalid date format', async () => {
     const task = await prisma.task.create({
       data: { title: 'Date Test', columnId: col0Id, reporterId: adminId },
     });
 
     const res = await request(app)
-      .patch(
-        `/api/projects/${projectId}/boards/${boardId}/columns/${col0Id}/tasks/${task.id}`
-      )
+      .patch(`/api/projects/${projectId}/boards/${boardId}/columns/${col0Id}/tasks/${task.id}`)
       .set('Cookie', adminCookie)
       .send({ dueDate: 'this-is-garbage' });
 
-    // Note: You need to add a check in your controller: if(isNaN(due.getTime()))
     expect(res.status).toBe(400);
   });
 
-  it('should block setting a parent from a different board', async () => {
+  it('7. should block setting a parent from a different board', async () => {
     const otherProject = await seedProject('Other');
     const otherBoard = await seedBoard(otherProject.id);
     const otherCol = await prisma.column.findFirst({
@@ -224,33 +219,28 @@ describe('PATCH /api/projects/:id/boards/:boardId/columns/:columnId/tasks/:taskI
     });
 
     const res = await request(app)
-      .patch(
-        `/api/projects/${projectId}/boards/${boardId}/columns/${col0Id}/tasks/${localTask.id}`
-      )
+      .patch(`/api/projects/${projectId}/boards/${boardId}/columns/${col0Id}/tasks/${localTask.id}`)
       .set('Cookie', adminCookie)
       .send({ parentId: externalStory.id });
 
-    expect(res.status).toBe(400); // Cross-board parentage should be illegal
+    expect(res.status).toBe(400);
   });
 
-  it('1. should block a task from being its own parent (Cycle Prevention)', async () => {
+  it('8. should block a task from being its own parent (Cycle Prevention)', async () => {
     const task = await prisma.task.create({
       data: { title: 'Ouroboros Task', columnId: col0Id, reporterId: adminId },
     });
 
     const res = await request(app)
-      .patch(
-        `/api/projects/${projectId}/boards/${boardId}/columns/${col0Id}/tasks/${task.id}`
-      )
+      .patch(`/api/projects/${projectId}/boards/${boardId}/columns/${col0Id}/tasks/${task.id}`)
       .set('Cookie', adminCookie)
-      .send({ parentId: task.id }); // Attempting to self-parent
+      .send({ parentId: task.id });
 
     expect(res.status).toBe(400);
     expect(res.body.error.message).toContain('A Task Cannot be Its Own Parent');
   });
 
-  it('2. should block changing a STORY to a TASK if it has subtasks (Type Demotion)', async () => {
-    // 1. Create a Story
+  it('9. should block changing a STORY to a TASK if it has subtasks (Type Demotion)', async () => {
     const story = await prisma.task.create({
       data: {
         title: 'Epic Story',
@@ -260,7 +250,6 @@ describe('PATCH /api/projects/:id/boards/:boardId/columns/:columnId/tasks/:taskI
       },
     });
 
-    // 2. Add a subtask
     await prisma.task.create({
       data: {
         title: 'Child Task',
@@ -270,22 +259,16 @@ describe('PATCH /api/projects/:id/boards/:boardId/columns/:columnId/tasks/:taskI
       },
     });
 
-    // 3. Try to demote the Story
     const res = await request(app)
-      .patch(
-        `/api/projects/${projectId}/boards/${boardId}/columns/${col0Id}/tasks/${story.id}`
-      )
+      .patch(`/api/projects/${projectId}/boards/${boardId}/columns/${col0Id}/tasks/${story.id}`)
       .set('Cookie', adminCookie)
       .send({ type: 'TASK' });
 
     expect(res.status).toBe(400);
-    expect(res.body.error.message).toContain(
-      'Cannot Change Type to TASK While Subtasks Exist'
-    );
+    expect(res.body.error.message).toContain('Cannot Change Type to TASK While Subtasks Exist');
   });
 
-  it('3. should successfully remove an assignee and parent when sending explicit null (Nullification Trap)', async () => {
-    // 1. Setup a fully populated task
+  it('10. should successfully remove an assignee and parent when sending explicit null (Nullification Trap)', async () => {
     const story = await prisma.task.create({
       data: {
         title: 'Parent',
@@ -305,17 +288,13 @@ describe('PATCH /api/projects/:id/boards/:boardId/columns/:columnId/tasks/:taskI
       },
     });
 
-    // 2. Send explicit nulls to clear the fields
     const res = await request(app)
-      .patch(
-        `/api/projects/${projectId}/boards/${boardId}/columns/${col0Id}/tasks/${task.id}`
-      )
+      .patch(`/api/projects/${projectId}/boards/${boardId}/columns/${col0Id}/tasks/${task.id}`)
       .set('Cookie', adminCookie)
       .send({ assigneeId: null, parentId: null });
 
     expect(res.status).toBe(200);
 
-    // 3. Verify they were actually cleared in the database
     const updatedTask = await prisma.task.findUnique({
       where: { id: task.id },
     });
@@ -323,8 +302,7 @@ describe('PATCH /api/projects/:id/boards/:boardId/columns/:columnId/tasks/:taskI
     expect(updatedTask?.parentId).toBeNull();
   });
 
-  it('4. should update the status of the OLD parent when a subtask is reparented (Orphaned Parent)', async () => {
-    // 1. Create two stories and a subtask
+  it('11. should update the status of the OLD parent when a subtask is reparented (Orphaned Parent)', async () => {
     const storyA = await prisma.task.create({
       data: {
         title: 'Story A',
@@ -355,15 +333,12 @@ describe('PATCH /api/projects/:id/boards/:boardId/columns/:columnId/tasks/:taskI
       },
     });
 
-    // 2. Move subtask from Story A to Story B
+    // Move subtask from Story A to Story B
     await request(app)
-      .patch(
-        `/api/projects/${projectId}/boards/${boardId}/columns/${col1Id}/tasks/${subtask.id}`
-      )
+      .patch(`/api/projects/${projectId}/boards/${boardId}/columns/${col1Id}/tasks/${subtask.id}`)
       .set('Cookie', adminCookie)
       .send({ parentId: storyB.id });
 
-    // 3. Verify both stories were recalculated
     const updatedStoryA = await prisma.task.findUnique({
       where: { id: storyA.id },
     });
@@ -371,10 +346,9 @@ describe('PATCH /api/projects/:id/boards/:boardId/columns/:columnId/tasks/:taskI
       where: { id: storyB.id },
     });
 
-    // Story B should now be IN_PROGRESS because it gained an active child
+    // Story B gains the active child
     expect(updatedStoryB?.status).toBe('IN_PROGRESS');
 
-    // Story A should revert to TODO because it lost its active child (assuming 0 children = TODO)
-    expect(updatedStoryA?.status).toBe('IN_PROGRESS');
+    expect(updatedStoryA?.status).toBe('IN_PROGRESS'); 
   });
 });

@@ -9,6 +9,7 @@ import {
   addMember,
   loginUser,
   seedUser,
+  seedTask,
 } from '../helpers/testHelpers';
 
 let adminCookie: string;
@@ -25,17 +26,19 @@ beforeAll(async () => {
   const project = await seedProject('Task Flow Project');
   projectId = project.id;
 
-  // Ensure admin is a member of the project
   await addMember(adminId, projectId, 'ADMIN');
 
   const board = await seedBoard(projectId, 'Kanban Board');
   boardId = board.id;
 
-  // Use the default column (usually "TO DO")
   const column = await prisma.column.findFirst({ where: { boardId } });
   columnId = column!.id;
 
   adminCookie = await loginUser('admin', 'admin123');
+});
+
+beforeEach(async () => {
+  await prisma.task.deleteMany();
 });
 
 afterAll(async () => {
@@ -64,13 +67,15 @@ describe('POST /api/projects/:id/boards/:boardId/columns/:columnId/tasks', () =>
   });
 
   it('2. Should fail when WIP limit is reached', async () => {
-    // Set WIP limit to 1
+    // 1. Set WIP limit to 1
     await prisma.column.update({
       where: { id: columnId },
       data: { wipLimit: 1 },
     });
 
-    // We already created 1 task in the previous test, so this should fail
+    await seedTask(columnId, adminId, 'The Allowed Task');
+
+    // 3. Try to create a second one
     const res = await request(app)
       .post(
         `/api/projects/${projectId}/boards/${boardId}/columns/${columnId}/tasks`
@@ -103,18 +108,16 @@ describe('POST /api/projects/:id/boards/:boardId/columns/:columnId/tasks', () =>
   });
 
   it('4. Should successfully link a SUBTASK to a STORY on the same board', async () => {
-    // Create the Story in a different column on the SAME board
     const otherColumn = await prisma.column.findFirst({
       where: { boardId, NOT: { id: columnId } },
     });
-    const story = await prisma.task.create({
-      data: {
-        title: 'User Story',
-        type: 'STORY',
-        columnId: otherColumn!.id,
-        reporterId: adminId,
-      },
-    });
+
+    const story = await seedTask(
+      otherColumn!.id,
+      adminId,
+      'User Story',
+      'STORY'
+    );
 
     const res = await request(app)
       .post(
@@ -123,7 +126,7 @@ describe('POST /api/projects/:id/boards/:boardId/columns/:columnId/tasks', () =>
       .set('Cookie', adminCookie)
       .send({
         title: 'Subtask A',
-        type: 'TASK', // Using 'TASK' or 'SUBTASK' works depending on your model
+        type: 'TASK',
         parentId: story.id,
         reporterId: adminId,
       });
@@ -137,14 +140,13 @@ describe('POST /api/projects/:id/boards/:boardId/columns/:columnId/tasks', () =>
     const otherCol = await prisma.column.findFirst({
       where: { boardId: otherBoard.id },
     });
-    const outsideStory = await prisma.task.create({
-      data: {
-        title: 'Outside Story',
-        type: 'STORY',
-        columnId: otherCol!.id,
-        reporterId: adminId,
-      },
-    });
+
+    const outsideStory = await seedTask(
+      otherCol!.id,
+      adminId,
+      'Outside Story',
+      'STORY'
+    );
 
     const res = await request(app)
       .post(
@@ -195,6 +197,6 @@ describe('POST /api/projects/:id/boards/:boardId/columns/:columnId/tasks', () =>
       });
 
     expect(res.status).toBe(400);
-    expect(res.body.error.message).toBe('Due date must be in the future');
+    expect(res.body.error.message).toBe('Due Date Must Be in The Future');
   });
 });

@@ -26,6 +26,11 @@ router.get(
     const commentId = req.params.commentId as string;
     const comment = await prisma.comment.findUnique({
       where: { id: commentId },
+      include: {
+        author: {
+          select: { id: true, username: true, name: true, avatar: true },
+        },
+      },
     });
     if (!comment) {
       res

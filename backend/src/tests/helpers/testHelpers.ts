@@ -117,3 +117,35 @@ export async function seedStoryTask(
     data: { title, type: 'STORY', columnId, reporterId },
   });
 }
+
+export async function seedComment(
+  taskId: string,
+  authorId: string,
+  content: string = 'This is a test comment'
+) {
+  return await prisma.comment.create({
+    data: { taskId, authorId, content },
+  });
+}
+
+export async function seedNotification(
+  userId: string,
+  taskId: string,
+  message: string = 'Test Notification Message'
+) {
+  return await prisma.notification.create({
+    data: { userId, taskId, message },
+  });
+}
+
+export async function seedAuditLog(
+  taskId: string,
+  userId: string,
+  action: string,
+  oldValue?: string,
+  newValue?: string
+) {
+  return await prisma.auditLog.create({
+    data: { taskId, userId, action, oldValue, newValue },
+  });
+}

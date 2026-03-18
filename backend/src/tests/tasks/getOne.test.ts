@@ -6,6 +6,8 @@ import {
   seedAdmin,
   seedProject,
   seedBoard,
+  seedColumn,
+  seedTask,
   addMember,
   loginUser,
 } from '../helpers/testHelpers';
@@ -33,14 +35,7 @@ beforeAll(async () => {
   const column = await prisma.column.findFirst({ where: { boardId } });
   columnId = column!.id;
 
-  const task = await prisma.task.create({
-    data: {
-      title: 'Detailed Task',
-      columnId,
-      reporterId: adminId,
-      status: column!.name,
-    },
-  });
+  const task = await seedTask(columnId, adminId, 'Detailed Task');
   taskId = task.id;
 
   adminCookie = await loginUser('admin', 'admin123');
@@ -63,15 +58,8 @@ describe('GET /api/projects/:id/boards/:boardId/columns/:columnId/tasks/:taskId'
     expect(res.body.title).toBe('Detailed Task');
   });
 
-  it('should return 404 if the task is accessed through the wrong column', async () => {
-    //Use a high order number (e.g., 999) to avoid unique constraint conflicts with seeded columns
-    const otherCol = await prisma.column.create({
-      data: {
-        name: 'Wrong Column Path',
-        order: 999,
-        boardId,
-      },
-    });
+  it('2. Should return 404 if the task is accessed through the wrong column', async () => {
+    const otherCol = await seedColumn(boardId, 'Wrong Column Path', 999);
 
     const res = await request(app)
       .get(
@@ -80,10 +68,10 @@ describe('GET /api/projects/:id/boards/:boardId/columns/:columnId/tasks/:taskId'
       .set('Cookie', adminCookie);
 
     expect(res.status).toBe(404);
-    expect(res.body.error.message).toBe('Task Not Found');
+    expect(res.body.error.message).toBe('Task Not Found'); // Make sure your controller uses this exact casing
   });
 
-  it('2. Should return 404 if the task does not exist', async () => {
+  it('3. Should return 404 if the task does not exist', async () => {
     const res = await request(app)
       .get(
         `/api/projects/${projectId}/boards/${boardId}/columns/${columnId}/tasks/non-existent-id`
@@ -94,7 +82,7 @@ describe('GET /api/projects/:id/boards/:boardId/columns/:columnId/tasks/:taskId'
     expect(res.body.error.code).toBe('NOT_FOUND');
   });
 
-  it('3. Should return 404 if the board ID in the path does not match the project', async () => {
+  it('4. Should return 404 if the board ID in the path does not match the project', async () => {
     // Create a different project and board to test unauthorized board access
     const otherProject = await seedProject('Other Project');
     const otherBoard = await seedBoard(otherProject.id, 'Other Board');

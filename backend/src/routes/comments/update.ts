@@ -6,13 +6,19 @@ import { auditLog } from '../../utils/auditLog';
 
 import { createNotification } from '../../utils/createNotification';
 
+import { requireProjectRole } from '../../middleware/roles';
+
 const router = express.Router();
 
 router.patch(
-  '/:id/tasks/:taskId/comments/:commentId',
+  '/:id/tasks/:taskId/comments/:commentId', requireProjectRole(['ADMIN','MEMBER']),
   async (req: Request, res: Response) => {
+    const projectId = req.params.id as string;
+
     const taskId = req.params.taskId as string;
-    const task = await prisma.task.findUnique({ where: { id: taskId } });
+    const task = await prisma.task.findUnique({
+      where: { id: taskId, column: { board: { projectId } } },
+    });
     if (!task) {
       res
         .status(404)
@@ -31,13 +37,17 @@ router.patch(
       return;
     }
 
+    if (comment.taskId !== taskId) {
+      res
+        .status(404)
+        .json({ error: { message: 'Comment NOT Found', code: 'NOT_FOUND' } });
+      return;
+    }
+
     const content = req.body.content;
-    if (!content) {
+    if (!content || typeof content !== 'string' || !content.trim()) {
       res.status(400).json({
-        error: {
-          message: 'Content is Required to Add Comment',
-          code: 'BAD_REQUEST',
-        },
+        error: { message: 'Comment is Required', code: 'BAD_REQUEST' },
       });
       return;
     }
@@ -55,14 +65,18 @@ router.patch(
 
     const mentions = content.match(/@(\w+)/g);
     if (mentions) {
-      for (const mention of mentions) {
-        const username = mention.slice(1);
-        const mentionedUser = await prisma.user.findUnique({
-          where: { username },
-        });
-        if (mentionedUser) {
+      const usernames = mentions.map((m: string) => m.slice(1));
+
+      const mentionedUsers = await prisma.user.findMany({
+        where: { username: { in: usernames } },
+        select: { id: true, username: true },
+      });
+
+      for (const user of mentionedUsers) {
+        // Don't notify the author if they weirdly mention themselves
+        if (user.id !== authorId) {
           await createNotification(
-            mentionedUser.id,
+            user.id,
             `You Were Mentioned in a Comment: "${content}"`,
             taskId
           );
@@ -70,7 +84,15 @@ router.patch(
       }
     }
 
-    const updated_comment = await prisma.comment.update({
+    if (task.assigneeId && task.assigneeId !== authorId) {
+      await createNotification(
+        task.assigneeId,
+        `Comment Updated on Your task: "${content}"`,
+        taskId
+      );
+    }
+
+    const updatedComment = await prisma.comment.update({
       where: { id: commentId },
       data: { content },
     });
@@ -80,10 +102,10 @@ router.patch(
       authorId,
       'COMMENT_EDITED',
       comment.content,
-      updated_comment.content
+      updatedComment.content
     );
 
-    res.status(200).json(updated_comment);
+    res.status(200).json(updatedComment);
   }
 );
 
