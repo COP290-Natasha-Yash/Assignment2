@@ -1,14 +1,19 @@
 import request from 'supertest';
 import app from '../../index';
 import { prisma } from '../../prisma';
-import { clearDatabase, seedAdmin, seedUser, loginUser } from '../helpers/testHelpers';
+import {
+  clearDatabase,
+  seedAdmin,
+  seedUser,
+  loginUser,
+} from '../helpers/testHelpers';
 
 let adminCookie: string;
 let normalUserCookie: string;
 
 beforeAll(async () => {
   await clearDatabase();
-  
+
   // 1. Setup Global Admin
   await seedAdmin();
   adminCookie = await loginUser('admin', 'admin123');
@@ -19,7 +24,7 @@ beforeAll(async () => {
 });
 
 beforeEach(async () => {
-  await prisma.project.deleteMany(); 
+  await prisma.project.deleteMany();
 });
 
 afterAll(async () => {
@@ -27,7 +32,6 @@ afterAll(async () => {
 });
 
 describe('POST /api/projects', () => {
-  
   it('1. Should create project successfully as a GLOBAL_ADMIN', async () => {
     const response = await request(app)
       .post('/api/projects')
@@ -57,17 +61,17 @@ describe('POST /api/projects', () => {
   it('3. Should fail if the user is not authenticated', async () => {
     const response = await request(app)
       .post('/api/projects')
-      .send({ name: 'Sneaky Project' }); 
+      .send({ name: 'Sneaky Project' });
 
-    expect(response.status).toBe(401); 
+    expect(response.status).toBe(401);
   });
 
   it('4. Should return 403 Forbidden if a normal user tries to create a project', async () => {
     const response = await request(app)
       .post('/api/projects')
       .send({ name: 'User Project' })
-      .set('Cookie', normalUserCookie); 
+      .set('Cookie', normalUserCookie);
 
-    expect(response.status).toBe(403); 
+    expect(response.status).toBe(403);
   });
 });

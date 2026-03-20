@@ -1,13 +1,13 @@
 import request from 'supertest';
 import app from '../../index';
-import { prisma } from '../../prisma'; 
+import { prisma } from '../../prisma';
 import {
   clearDatabase,
   seedAdmin,
   seedProject,
   loginUser,
   seedUser,
-  addMember, 
+  addMember,
 } from '../helpers/testHelpers';
 
 let adminCookie: string;
@@ -17,7 +17,7 @@ let projectId: string;
 
 beforeAll(async () => {
   await clearDatabase();
-  
+
   // 1. Setup Admin
   const admin = await seedAdmin();
   adminId = admin.id;
@@ -30,12 +30,12 @@ beforeAll(async () => {
 
 beforeEach(async () => {
   await prisma.project.deleteMany(); // Wipes old projects
-  
+
   const project = await seedProject('Archive Test Project');
   projectId = project.id;
-  
+
   // Ensure the admin actually has rights to this specific project
-  await addMember(adminId, projectId, 'ADMIN'); 
+  await addMember(adminId, projectId, 'ADMIN');
 });
 
 afterAll(async () => {
@@ -43,12 +43,11 @@ afterAll(async () => {
 });
 
 describe('PATCH /api/projects/:id/archive', () => {
-  
   it('1. Should archive project successfully', async () => {
     const response = await request(app)
       .patch(`/api/projects/${projectId}/archive`)
       .set('Cookie', adminCookie);
-      
+
     expect(response.status).toBe(200);
     expect(response.body.archived).toBe(true);
   });
@@ -57,7 +56,7 @@ describe('PATCH /api/projects/:id/archive', () => {
     const response = await request(app)
       .patch('/api/projects/cm00000000000000000000000/archive') // Use a valid CUID/UUID format that doesn't exist
       .set('Cookie', adminCookie);
-      
+
     expect(response.status).toBe(404);
   });
 
@@ -71,9 +70,9 @@ describe('PATCH /api/projects/:id/archive', () => {
     const response = await request(app)
       .patch(`/api/projects/${projectId}/archive`)
       .set('Cookie', adminCookie);
-      
+
     expect(response.status).toBe(400);
-    expect(response.body.error?.code).toBe('BAD_REQUEST'); 
+    expect(response.body.error?.code).toBe('BAD_REQUEST');
   });
 
   it('4. Should return 403 if user is not a project member', async () => {

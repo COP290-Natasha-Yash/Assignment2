@@ -64,7 +64,6 @@ afterAll(async () => {
 });
 
 describe('PATCH /api/projects/:id/tasks/:taskId/comments/:commentId', () => {
-
   it('should successfully edit a comment and create an audit log', async () => {
     const res = await request(app)
       .patch(`/api/projects/${projectId}/tasks/${taskId}/comments/${commentId}`)
@@ -92,11 +91,15 @@ describe('PATCH /api/projects/:id/tasks/:taskId/comments/:commentId', () => {
   });
 
   it('should return 404 if comment does not belong to the task', async () => {
-    const col = await prisma.column.findFirst({ where: { board: { projectId } } });
+    const col = await prisma.column.findFirst({
+      where: { board: { projectId } },
+    });
     const otherTask = await seedTask(col!.id, userId, 'Wrong Task');
 
     const res = await request(app)
-      .patch(`/api/projects/${projectId}/tasks/${otherTask.id}/comments/${commentId}`)
+      .patch(
+        `/api/projects/${projectId}/tasks/${otherTask.id}/comments/${commentId}`
+      )
       .set('Cookie', userCookie)
       .send({ content: 'Wrong task' });
 
@@ -160,12 +163,13 @@ describe('PATCH /api/projects/:id/tasks/:taskId/comments/:commentId', () => {
 
   it('should return 404 if comment not found', async () => {
     const res = await request(app)
-      .patch(`/api/projects/${projectId}/tasks/${taskId}/comments/invalidcommentid`)
+      .patch(
+        `/api/projects/${projectId}/tasks/${taskId}/comments/invalidcommentid`
+      )
       .set('Cookie', userCookie)
       .send({ content: 'Updated' });
 
     expect(res.status).toBe(404);
     expect(res.body.error.code).toBe('NOT_FOUND');
   });
-
 });

@@ -4,6 +4,8 @@ import { prisma } from '../../prisma';
 
 import { requireProjectRole } from '../../middleware/roles';
 
+import { createNotification } from '../../utils/createNotification';
+
 const router = express.Router();
 
 router.post(
@@ -222,6 +224,14 @@ router.post(
         parentId,
       },
     });
+
+    if (task.assigneeId) {
+      await createNotification(
+        task.assigneeId,
+        'You Have Been Assigned a Task',
+        task
+      );
+    }
 
     res.status(201).json(task);
   }

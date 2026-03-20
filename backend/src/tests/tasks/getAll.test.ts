@@ -6,7 +6,7 @@ import {
   seedAdmin,
   seedProject,
   seedBoard,
-  seedColumn, 
+  seedColumn,
   addMember,
   loginUser,
   seedTask,

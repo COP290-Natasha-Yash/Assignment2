@@ -36,7 +36,7 @@ router.patch(
       return;
     }
 
-    const updated_user = await prisma.user.update({
+    const updatedUser = await prisma.user.update({
       where: { id: userId },
       data: { globalRole: role },
       select: {
@@ -48,7 +48,7 @@ router.patch(
       },
     });
 
-    res.status(200).json(updated_user);
+    res.status(200).json(updatedUser);
   }
 );
 

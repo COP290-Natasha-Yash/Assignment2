@@ -11,7 +11,8 @@ import { requireProjectRole } from '../../middleware/roles';
 const router = express.Router();
 
 router.patch(
-  '/:id/tasks/:taskId/comments/:commentId', requireProjectRole(['ADMIN','MEMBER']),
+  '/:id/tasks/:taskId/comments/:commentId',
+  requireProjectRole(['ADMIN', 'MEMBER']),
   async (req: Request, res: Response) => {
     const projectId = req.params.id as string;
 
@@ -78,7 +79,7 @@ router.patch(
           await createNotification(
             user.id,
             `You Were Mentioned in a Comment: "${content}"`,
-            taskId
+            task
           );
         }
       }
@@ -88,7 +89,7 @@ router.patch(
       await createNotification(
         task.assigneeId,
         `Comment Updated on Your task: "${content}"`,
-        taskId
+        task
       );
     }
 

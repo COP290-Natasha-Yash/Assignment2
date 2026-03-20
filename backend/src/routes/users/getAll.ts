@@ -1,10 +1,11 @@
 import express, { Request, Response } from 'express';
 
 import { prisma } from '../../prisma';
+import { requireGlobalAdmin } from '../../middleware/roles';
 
 const router = express.Router();
 
-router.get('/', async (req: Request, res: Response) => {
+router.get('/', requireGlobalAdmin, async (req: Request, res: Response) => {
   const users = await prisma.user.findMany({
     select: {
       id: true,

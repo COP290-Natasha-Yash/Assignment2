@@ -6,6 +6,7 @@ import { prisma } from '../../prisma';
 const router = express.Router();
 
 const JWT_SECRET = process.env.JWT_SECRET || 'supersecret';
+const JWT_REFRESH_SECRET = process.env.JWT_REFRESH_SECRET || 'supersecretrefresh';
 
 router.post('/refresh', async (req: Request, res: Response) => {
   const refreshToken = req.cookies.refreshToken;
@@ -18,7 +19,7 @@ router.post('/refresh', async (req: Request, res: Response) => {
   }
 
   try {
-    jwt.verify(refreshToken, JWT_SECRET);
+    jwt.verify(refreshToken, JWT_REFRESH_SECRET);
   } catch {
     res.status(401).json({
       error: { message: 'Invalid Refresh Token', code: 'UNAUTHORIZED' },

@@ -42,9 +42,9 @@ beforeAll(async () => {
     where: { id: col1Id },
     data: { name: 'IN_PROGRESS' },
   });
-  await prisma.column.update({ 
-    where: { id: col2Id }, 
-    data: { name: 'DONE' } 
+  await prisma.column.update({
+    where: { id: col2Id },
+    data: { name: 'DONE' },
   });
 
   adminCookie = await loginUser('admin', 'admin123');
@@ -61,14 +61,15 @@ afterAll(async () => {
 });
 
 describe('PATCH /api/projects/:id/boards/:boardId/columns/:columnId/tasks/:taskId', () => {
-  
   it('1. should generate an audit log and notification when assignee changes', async () => {
     const task = await prisma.task.create({
       data: { title: 'Assignment Test', columnId: col0Id, reporterId: adminId },
     });
 
     const res = await request(app)
-      .patch(`/api/projects/${projectId}/boards/${boardId}/columns/${col0Id}/tasks/${task.id}`)
+      .patch(
+        `/api/projects/${projectId}/boards/${boardId}/columns/${col0Id}/tasks/${task.id}`
+      )
       .set('Cookie', adminCookie)
       .send({ assigneeId: adminId });
 
@@ -100,7 +101,9 @@ describe('PATCH /api/projects/:id/boards/:boardId/columns/:columnId/tasks/:taskI
 
     // Move to DONE
     const doneRes = await request(app)
-      .patch(`/api/projects/${projectId}/boards/${boardId}/columns/${col1Id}/tasks/${task.id}`)
+      .patch(
+        `/api/projects/${projectId}/boards/${boardId}/columns/${col1Id}/tasks/${task.id}`
+      )
       .set('Cookie', adminCookie)
       .send({ status: 'DONE' });
 
@@ -108,7 +111,9 @@ describe('PATCH /api/projects/:id/boards/:boardId/columns/:columnId/tasks/:taskI
 
     // Move back to IN_PROGRESS
     const backRes = await request(app)
-      .patch(`/api/projects/${projectId}/boards/${boardId}/columns/${col2Id}/tasks/${task.id}`)
+      .patch(
+        `/api/projects/${projectId}/boards/${boardId}/columns/${col2Id}/tasks/${task.id}`
+      )
       .set('Cookie', adminCookie)
       .send({ status: 'IN_PROGRESS' });
 
@@ -137,7 +142,9 @@ describe('PATCH /api/projects/:id/boards/:boardId/columns/:columnId/tasks/:taskI
     });
 
     await request(app)
-      .patch(`/api/projects/${projectId}/boards/${boardId}/columns/${col0Id}/tasks/${subtask.id}`)
+      .patch(
+        `/api/projects/${projectId}/boards/${boardId}/columns/${col0Id}/tasks/${subtask.id}`
+      )
       .set('Cookie', adminCookie)
       .send({ status: 'IN_PROGRESS' });
 
@@ -154,7 +161,9 @@ describe('PATCH /api/projects/:id/boards/:boardId/columns/:columnId/tasks/:taskI
     });
 
     const res = await request(app)
-      .patch(`/api/projects/${projectId}/boards/${boardId}/columns/${col0Id}/tasks/${task.id}`)
+      .patch(
+        `/api/projects/${projectId}/boards/${boardId}/columns/${col0Id}/tasks/${task.id}`
+      )
       .set('Cookie', adminCookie)
       .send({ assigneeId: 'some-random-id' });
 
@@ -167,7 +176,7 @@ describe('PATCH /api/projects/:id/boards/:boardId/columns/:columnId/tasks/:taskI
       where: { id: col1Id },
       data: { wipLimit: 1 },
     });
-    
+
     const task = await prisma.task.create({
       data: {
         title: 'Solo',
@@ -178,11 +187,13 @@ describe('PATCH /api/projects/:id/boards/:boardId/columns/:columnId/tasks/:taskI
     });
 
     const res = await request(app)
-      .patch(`/api/projects/${projectId}/boards/${boardId}/columns/${col1Id}/tasks/${task.id}`)
+      .patch(
+        `/api/projects/${projectId}/boards/${boardId}/columns/${col1Id}/tasks/${task.id}`
+      )
       .set('Cookie', adminCookie)
       .send({ title: 'Updated Title' });
 
-    expect(res.status).toBe(200); 
+    expect(res.status).toBe(200);
   });
 
   it('6. should return 400 for an invalid date format', async () => {
@@ -191,7 +202,9 @@ describe('PATCH /api/projects/:id/boards/:boardId/columns/:columnId/tasks/:taskI
     });
 
     const res = await request(app)
-      .patch(`/api/projects/${projectId}/boards/${boardId}/columns/${col0Id}/tasks/${task.id}`)
+      .patch(
+        `/api/projects/${projectId}/boards/${boardId}/columns/${col0Id}/tasks/${task.id}`
+      )
       .set('Cookie', adminCookie)
       .send({ dueDate: 'this-is-garbage' });
 
@@ -219,7 +232,9 @@ describe('PATCH /api/projects/:id/boards/:boardId/columns/:columnId/tasks/:taskI
     });
 
     const res = await request(app)
-      .patch(`/api/projects/${projectId}/boards/${boardId}/columns/${col0Id}/tasks/${localTask.id}`)
+      .patch(
+        `/api/projects/${projectId}/boards/${boardId}/columns/${col0Id}/tasks/${localTask.id}`
+      )
       .set('Cookie', adminCookie)
       .send({ parentId: externalStory.id });
 
@@ -232,7 +247,9 @@ describe('PATCH /api/projects/:id/boards/:boardId/columns/:columnId/tasks/:taskI
     });
 
     const res = await request(app)
-      .patch(`/api/projects/${projectId}/boards/${boardId}/columns/${col0Id}/tasks/${task.id}`)
+      .patch(
+        `/api/projects/${projectId}/boards/${boardId}/columns/${col0Id}/tasks/${task.id}`
+      )
       .set('Cookie', adminCookie)
       .send({ parentId: task.id });
 
@@ -260,12 +277,16 @@ describe('PATCH /api/projects/:id/boards/:boardId/columns/:columnId/tasks/:taskI
     });
 
     const res = await request(app)
-      .patch(`/api/projects/${projectId}/boards/${boardId}/columns/${col0Id}/tasks/${story.id}`)
+      .patch(
+        `/api/projects/${projectId}/boards/${boardId}/columns/${col0Id}/tasks/${story.id}`
+      )
       .set('Cookie', adminCookie)
       .send({ type: 'TASK' });
 
     expect(res.status).toBe(400);
-    expect(res.body.error.message).toContain('Cannot Change Type to TASK While Subtasks Exist');
+    expect(res.body.error.message).toContain(
+      'Cannot Change Type to TASK While Subtasks Exist'
+    );
   });
 
   it('10. should successfully remove an assignee and parent when sending explicit null (Nullification Trap)', async () => {
@@ -289,7 +310,9 @@ describe('PATCH /api/projects/:id/boards/:boardId/columns/:columnId/tasks/:taskI
     });
 
     const res = await request(app)
-      .patch(`/api/projects/${projectId}/boards/${boardId}/columns/${col0Id}/tasks/${task.id}`)
+      .patch(
+        `/api/projects/${projectId}/boards/${boardId}/columns/${col0Id}/tasks/${task.id}`
+      )
       .set('Cookie', adminCookie)
       .send({ assigneeId: null, parentId: null });
 
@@ -335,7 +358,9 @@ describe('PATCH /api/projects/:id/boards/:boardId/columns/:columnId/tasks/:taskI
 
     // Move subtask from Story A to Story B
     await request(app)
-      .patch(`/api/projects/${projectId}/boards/${boardId}/columns/${col1Id}/tasks/${subtask.id}`)
+      .patch(
+        `/api/projects/${projectId}/boards/${boardId}/columns/${col1Id}/tasks/${subtask.id}`
+      )
       .set('Cookie', adminCookie)
       .send({ parentId: storyB.id });
 
@@ -349,6 +374,6 @@ describe('PATCH /api/projects/:id/boards/:boardId/columns/:columnId/tasks/:taskI
     // Story B gains the active child
     expect(updatedStoryB?.status).toBe('IN_PROGRESS');
 
-    expect(updatedStoryA?.status).toBe('IN_PROGRESS'); 
+    expect(updatedStoryA?.status).toBe('IN_PROGRESS');
   });
 });

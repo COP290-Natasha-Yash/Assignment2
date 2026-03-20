@@ -4,7 +4,7 @@ import { prisma } from '../../prisma';
 
 const router = express.Router();
 
-router.patch('/:notificationId', async (req: Request, res: Response) => {
+router.get('/:notificationId', async (req: Request, res: Response) => {
   const notificationId = req.params.notificationId as string;
   const notification = await prisma.notification.findUnique({
     where: { id: notificationId },
@@ -27,12 +27,7 @@ router.patch('/:notificationId', async (req: Request, res: Response) => {
     return;
   }
 
-  const updatedNotification = await prisma.notification.update({
-    where: { id: notificationId },
-    data: { read: true },
-  });
-
-  res.status(200).json(updatedNotification);
+  res.status(200).json(notification);
 });
 
 export default router;

@@ -6,8 +6,8 @@ import {
   seedAdmin,
   seedProject,
   seedBoard,
-  seedColumn, 
-  seedTask,   
+  seedColumn,
+  seedTask,
   addMember,
   loginUser,
 } from '../helpers/testHelpers';
@@ -48,9 +48,9 @@ beforeAll(async () => {
     where: { id: col1Id },
     data: { name: 'IN_PROGRESS' },
   });
-  await prisma.column.update({ 
-    where: { id: col2Id }, 
-    data: { name: 'DONE' } 
+  await prisma.column.update({
+    where: { id: col2Id },
+    data: { name: 'DONE' },
   });
 
   const closedCol = await seedColumn(boardId, 'CLOSED', 10);
@@ -68,12 +68,13 @@ afterAll(async () => {
 });
 
 describe('PATCH /api/projects/:id/boards/:boardId/tasks/:taskId/move', () => {
-  
   it('1. Should successfully move a task to an adjacent column and sync status', async () => {
     const task = await seedTask(col0Id, adminId, 'Valid Move');
 
     const res = await request(app)
-      .patch(`/api/projects/${projectId}/boards/${boardId}/tasks/${task.id}/move`)
+      .patch(
+        `/api/projects/${projectId}/boards/${boardId}/tasks/${task.id}/move`
+      )
       .set('Cookie', adminCookie)
       .send({ columnId: col1Id });
 
@@ -86,19 +87,25 @@ describe('PATCH /api/projects/:id/boards/:boardId/tasks/:taskId/move', () => {
     const story = await seedTask(col0Id, adminId, 'Immovable Story', 'STORY');
 
     const res = await request(app)
-      .patch(`/api/projects/${projectId}/boards/${boardId}/tasks/${story.id}/move`)
+      .patch(
+        `/api/projects/${projectId}/boards/${boardId}/tasks/${story.id}/move`
+      )
       .set('Cookie', adminCookie)
       .send({ columnId: col1Id });
 
     expect(res.status).toBe(400);
-    expect(res.body.error.message).toContain('"STORY" Type task is NOT Movable');
+    expect(res.body.error.message).toContain(
+      '"STORY" Type task is NOT Movable'
+    );
   });
 
   it('3. Should enforce the adjacency rule (Order 0 cannot jump to Order 2)', async () => {
     const task = await seedTask(col0Id, adminId, 'Long Jumper');
 
     const res = await request(app)
-      .patch(`/api/projects/${projectId}/boards/${boardId}/tasks/${task.id}/move`)
+      .patch(
+        `/api/projects/${projectId}/boards/${boardId}/tasks/${task.id}/move`
+      )
       .set('Cookie', adminCookie)
       .send({ columnId: col2Id });
 
@@ -110,7 +117,9 @@ describe('PATCH /api/projects/:id/boards/:boardId/tasks/:taskId/move', () => {
     const task = await seedTask(col0Id, adminId, 'Emergency Shutdown');
 
     const res = await request(app)
-      .patch(`/api/projects/${projectId}/boards/${boardId}/tasks/${task.id}/move`)
+      .patch(
+        `/api/projects/${projectId}/boards/${boardId}/tasks/${task.id}/move`
+      )
       .set('Cookie', adminCookie)
       .send({ columnId: closedColId });
 
@@ -125,12 +134,14 @@ describe('PATCH /api/projects/:id/boards/:boardId/tasks/:taskId/move', () => {
       where: { id: col1Id },
       data: { wipLimit: 1 },
     });
-    
+
     await seedTask(col1Id, adminId, 'Occupant');
     const task = await seedTask(col0Id, adminId, 'Waitlisted');
 
     const res = await request(app)
-      .patch(`/api/projects/${projectId}/boards/${boardId}/tasks/${task.id}/move`)
+      .patch(
+        `/api/projects/${projectId}/boards/${boardId}/tasks/${task.id}/move`
+      )
       .set('Cookie', adminCookie)
       .send({ columnId: col1Id });
 
@@ -149,7 +160,9 @@ describe('PATCH /api/projects/:id/boards/:boardId/tasks/:taskId/move', () => {
 
     // 1. Move to DONE
     const doneRes = await request(app)
-      .patch(`/api/projects/${projectId}/boards/${boardId}/tasks/${task.id}/move`)
+      .patch(
+        `/api/projects/${projectId}/boards/${boardId}/tasks/${task.id}/move`
+      )
       .set('Cookie', adminCookie)
       .send({ columnId: col2Id });
 
@@ -157,7 +170,9 @@ describe('PATCH /api/projects/:id/boards/:boardId/tasks/:taskId/move', () => {
 
     // 2. Move back to IN_PROGRESS
     const backRes = await request(app)
-      .patch(`/api/projects/${projectId}/boards/${boardId}/tasks/${task.id}/move`)
+      .patch(
+        `/api/projects/${projectId}/boards/${boardId}/tasks/${task.id}/move`
+      )
       .set('Cookie', adminCookie)
       .send({ columnId: col1Id });
 

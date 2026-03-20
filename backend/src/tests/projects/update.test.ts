@@ -1,13 +1,13 @@
 import request from 'supertest';
 import app from '../../index';
-import { prisma } from '../../prisma'; 
+import { prisma } from '../../prisma';
 import {
   clearDatabase,
   seedAdmin,
   seedProject,
   loginUser,
   seedUser,
-  addMember, 
+  addMember,
 } from '../helpers/testHelpers';
 
 let adminCookie: string;
@@ -17,13 +17,13 @@ let projectId: string;
 
 beforeAll(async () => {
   await clearDatabase();
-  
+
   // 1. Setup Admin
   const admin = await seedAdmin();
   adminId = admin.id;
   adminCookie = await loginUser('admin', 'admin123');
 
-  // 2. Setup Stranger 
+  // 2. Setup Stranger
   await seedUser('Stranger', 'stranger@test.com', '_stranger_', 'stranger123');
   strangerCookie = await loginUser('_stranger_', 'stranger123');
 });
@@ -34,7 +34,7 @@ beforeEach(async () => {
 
   const project = await seedProject('Original Project Name');
   projectId = project.id;
-  
+
   // CGive the admin explicit permission to edit this project!
   await addMember(adminId, projectId, 'ADMIN');
 });
@@ -44,7 +44,6 @@ afterAll(async () => {
 });
 
 describe('PATCH /api/projects/:id', () => {
-  
   it('1. Should update project successfully with all fields', async () => {
     const res = await request(app)
       .patch(`/api/projects/${projectId}`)
@@ -70,7 +69,7 @@ describe('PATCH /api/projects/:id', () => {
   it('3. Should return 404 for a non-existent project', async () => {
     // Use a fake ID matching the DB's format
     const fakeId = 'cm00000000000000000000000';
-    
+
     const res = await request(app)
       .patch(`/api/projects/${fakeId}`)
       .send({ name: 'New Name' })
@@ -95,9 +94,11 @@ describe('PATCH /api/projects/:id', () => {
       .set('Cookie', strangerCookie);
 
     expect(res.status).toBe(403);
-    
+
     // Verify the DB wasn't touched
-    const unchangedProject = await prisma.project.findUnique({ where: { id: projectId } });
+    const unchangedProject = await prisma.project.findUnique({
+      where: { id: projectId },
+    });
     expect(unchangedProject?.name).toBe('Original Project Name');
   });
 });

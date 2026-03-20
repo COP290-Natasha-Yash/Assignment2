@@ -311,7 +311,7 @@ router.patch(
         await createNotification(
           updatedTask.assigneeId,
           'Task Status Has Been Updated',
-          taskId
+          task
         );
       }
     }
@@ -329,7 +329,7 @@ router.patch(
         await createNotification(
           updatedTask.assigneeId,
           'You Have Been Assigned a Task',
-          taskId
+          task
         );
       }
     }

@@ -11,6 +11,8 @@ import notificationsRouter from './routes/notifications';
 import membersRouter from './routes/members';
 import usersRouter from './routes/users';
 
+import path from 'path';
+
 const app = express();
 
 app.use(express.json());
@@ -26,5 +28,6 @@ app.use('/api/projects', authenticate, commentsRouter);
 app.use('/api/notifications', authenticate, notificationsRouter);
 app.use('/api/projects', authenticate, membersRouter);
 app.use('/api/users', authenticate, usersRouter);
+app.use('/uploads', express.static(path.join(__dirname, '../src/uploads')));
 
 export default app;

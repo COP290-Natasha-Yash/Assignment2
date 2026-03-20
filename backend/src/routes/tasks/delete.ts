@@ -69,18 +69,6 @@ router.delete(
       return;
     }
 
-    //OPTION- A
-    //    const subTasks = await prisma.task.findMany({ where: { parentId: taskId } });
-    //    if (subTasks.length > 0) {
-    //        res.status(400).json({ error: { message: 'Cannot Delete a Story With Subtasks', code: 'BAD_REQUEST' } });
-    //        return;
-    //    }
-
-    //    await prisma.task.delete({ where: { id: taskId } });
-
-    //OPTION-B
-    //    await prisma.task.deleteMany({ where: { parentId: taskId } });
-
     await prisma.task.delete({ where: { id: taskId } });
 
     res.status(200).json({ message: 'Task Deleted Successfully' });

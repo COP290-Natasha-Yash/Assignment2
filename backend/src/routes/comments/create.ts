@@ -66,7 +66,7 @@ router.post(
           await createNotification(
             user.id,
             `You Were Mentioned in a Comment: "${content}"`,
-            taskId
+            task
           );
         }
       }
@@ -76,7 +76,7 @@ router.post(
       await createNotification(
         task.assigneeId,
         `New Comment on Your task: "${content}"`,
-        taskId
+        task
       );
     }
 

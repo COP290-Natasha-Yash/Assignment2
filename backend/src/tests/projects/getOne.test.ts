@@ -7,7 +7,7 @@ import {
   seedProject,
   loginUser,
   seedUser,
-  addMember, 
+  addMember,
 } from '../helpers/testHelpers';
 
 let adminCookie: string;
@@ -17,7 +17,7 @@ let projectId: string;
 
 beforeAll(async () => {
   await clearDatabase();
-  
+
   // 1. Setup Admin
   const admin = await seedAdmin();
   adminId = admin.id;
@@ -34,7 +34,7 @@ beforeEach(async () => {
 
   const project = await seedProject('Project Details Test');
   projectId = project.id;
-  
+
   // Ensure the admin actually has rights to this specific project
   await addMember(adminId, projectId, 'ADMIN');
 });
@@ -44,7 +44,6 @@ afterAll(async () => {
 });
 
 describe('GET /api/projects/:id', () => {
-  
   it('1. Should return project details for an authorized user', async () => {
     const response = await request(app)
       .get(`/api/projects/${projectId}`)
@@ -57,8 +56,8 @@ describe('GET /api/projects/:id', () => {
 
   it('2. Should return 404 if the project does not exist', async () => {
     // Use a fake ID that matches the DB's format (e.g., CUID or UUID)
-    const fakeId = 'cm00000000000000000000000'; 
-    
+    const fakeId = 'cm00000000000000000000000';
+
     const response = await request(app)
       .get(`/api/projects/${fakeId}`)
       .set('Cookie', adminCookie);
