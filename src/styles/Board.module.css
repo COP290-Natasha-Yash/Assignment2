@@ -112,3 +112,36 @@
   border-radius:6px;
   cursor:pointer;
 }
+.roleSelector {
+  margin-top: 10px;
+  margin-bottom: 20px;
+}
+
+.roleSelector label {
+  font-weight: 600;
+  margin-right: 10px;
+}
+
+.roleSelector select {
+  padding: 6px 12px;
+  border-radius: 6px;
+  border: 1px solid #ccc;
+  font-size: 14px;
+  cursor: pointer;
+  background-color: white;
+  transition: 0.2s;
+}
+
+.roleSelector select:hover {
+  border-color: #5b6dfc;
+}
+
+.roleSelector select:focus {
+  outline: none;
+  border-color: #5b6dfc;
+  box-shadow: 0 0 3px rgba(91,109,252,0.4);
+}
+.activeColumn {
+  border: 3px dashed #4CAF50;
+  background-color: #f0fff0;
+}

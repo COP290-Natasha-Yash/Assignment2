@@ -6,98 +6,150 @@ function Dashboard() {
 
 const navigate = useNavigate();
 
-const [projects, setProjects] = useState<{ id: number; name: string }[]>([]);
+const [projects, setProjects] = useState<
+{ id: number; name: string; description: string; createdAt: string; updatedAt: string ;assignee: string;}[]
+>([]);
 
-  const createProject = () => {
-    const name = prompt("Enter project name");
+const createProject = () => {
+const name = prompt("Enter project name");
+const description = prompt("Enter project description");
+const assignee = prompt("Assign user (Natasha / Aman / Riya)");
 
-    if (!name) return;
+if (!name) return;
 
-    const newProject = {
-      id: Date.now(),
-      name
-    };
+const newProject = {
+id: Date.now(),
+name,
+description: description || "",
+assignee: assignee || "Unassigned",
+createdAt: new Date().toLocaleString(),
+updatedAt: new Date().toLocaleString() 
 
-    setProjects([...projects, newProject]);
-  };
+};
 
-  return (
+setProjects([...projects, newProject]);
+};
 
-    <div className={styles.dashboardLayout}>
+const editProject = (project: { id: number; name: string }) => {
+const newName = prompt("Edit project name", project.name);
+if (!newName) return;
 
-      {/* Sidebar */}
+const updatedProjects = projects.map((p) =>
+p.id === project.id ? { ...p, name: newName } : p
+);
 
-      <div className={styles.sidebar}>
+setProjects(updatedProjects);
+};
 
-        <div className={styles.sidebarTitle}>
-          Welcome Back 👋
-        </div>
+const archiveProject = (id: number) => {
+const updatedProjects = projects.filter((p) => p.id !== id);
+setProjects(updatedProjects);
+};
 
-        <ul className={styles.sidebarMenu}>
-            <li>🏠 Home</li>
-            <li>📁 Projects</li>
-            <li>✅ Tasks</li>
-        </ul>
+return (
 
+<div className={styles.dashboardLayout}>
+
+{/* Sidebar */}
+
+  <div className={styles.sidebar}>
+
+```
+<div className={styles.sidebarTitle}>
+  Welcome Back 👋
+</div>
+
+<ul className={styles.sidebarMenu}>
+  <li>🏠 Home</li>
+  <li>📁 Projects</li>
+  <li>✅ Tasks</li>
+</ul>
+```
+
+  </div>
+
+{/* Main Area */}
+
+  <div className={styles.mainArea}>
+
+```
+{/* Topbar */}
+
+<div className={styles.topbar}>
+
+  <div className={styles.dashboardTitle}>
+    Dashboard
+  </div>
+
+  <div className={styles.topIcons}>
+    <div className={styles.notification}>
+      🔔
+      <span className={styles.badge}>3</span>
+    </div>
+
+    <div className={styles.profile}>
+      N
+    </div>
+  </div>
+
+</div>
+
+{/* Projects Section */}
+
+<div className={styles.header}>
+  <h2 className={styles.projectsTitle}>My project</h2>
+
+  <button
+    className={styles.createButton}
+    onClick={createProject}
+  >
+    + Create Project
+  </button>
+</div>
+
+<div className={styles.projectGrid}>
+
+  {projects.map((project) => (
+    <div
+      key={project.id}
+      className={styles.projectCard}
+    >
+
+      <div
+        className={styles.projectTitle}
+        onClick={() => navigate("/board")}
+      >
+        {project.name}
       </div>
+      <p>{project.description}</p>
+      <p>Assigned: {project.assignee}</p>
+      <p>Created: {project.createdAt}</p>
+      <p>Updated: {project.updatedAt}</p>
+      
 
-      {/* Main Area */}
+      <div style={{ marginTop: "8px" }}>
 
-      <div className={styles.mainArea}>
+        <button onClick={() => editProject(project)}>
+          ✏️
+        </button>
 
-        {/* Topbar */}
-
-        <div className={styles.topbar}>
-
-          <div className={styles.dashboardTitle}>
-            Dashboard
-          </div>
-
-          <div className={styles.topIcons}>
-            <div className={styles.notification}>
-                🔔
-                <span className={styles.badge}>3</span>
-            </div>
-            <div className={styles.profile}>
-                N
-            </div>
-          </div>
-
-        </div>
-
-        {/* Projects Section */}
-
-        <div className={styles.header}>
-          <h2 className={styles.projectsTitle}>My project</h2>
-
-          <button
-            className={styles.createButton}
-            onClick={createProject}
-          >
-            + Create Project
-          </button>
-        </div>
-
-        <div className={styles.projectGrid}>
-
-          {projects.map((project) => (
-            <div
-              key={project.id}
-              className={styles.projectCard}
-              onClick={() => navigate("/board")}
-            >
-              <div className={styles.projectTitle}>
-                {project.name}
-              </div>
-            </div>
-          ))}
-
-        </div>
+        <button onClick={() => archiveProject(project.id)}>
+          🗂
+        </button>
 
       </div>
 
     </div>
-  );
+  ))}
+
+</div>
+```
+
+  </div>
+
+</div>
+
+);
 }
 
 export default Dashboard;

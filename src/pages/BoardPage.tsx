@@ -1,320 +1,318 @@
-import { useState , useEffect } from "react";
+import { useState, useEffect } from "react";
 import styles from "../styles/Board.module.css";
 
 function BoardPage() {
+  
+  const [dragOverColumn, setDragOverColumn] = useState<string | null>(null);
+  const WIP_LIMIT = 3;
+  const [role, setRole] = useState("admin"); 
+  <div style={{ marginBottom: "10px" }}>
+  Role: <strong>{role.toUpperCase()}</strong>
+</div>
+// try: "admin" | "member" | "viewer"
 
-  const [tasks, setTasks] = useState({
+  const [tasks, setTasks] = useState<any>({
     todo: [
-        { title: "Design UI", priority: "High" },
-        { title: "Create Login Page", priority: "Medium" }
+      { title: "Design UI", priority: "High" },
+      { title: "Create Login Page", priority: "Medium" }
     ],
     progress: [
-        {title :"Setup Database", priority :"Low"}
+      { title: "Setup Database", priority: "Low" }
     ],
     review: [],
     done: [
-        {title:"Project Setup", priority :"Low"}
+      { title: "Project Setup", priority: "Low" }
     ]
- });
- 
- useEffect(() => {
-  const savedTasks = localStorage.getItem("tasks");
+  });
 
-  if (savedTasks) {
-    setTasks(JSON.parse(savedTasks));
-  }
+  const [extraColumns, setExtraColumns] = useState<any[]>([]);
+
+  const [draggedTask, setDraggedTask] = useState<any>(null);
+  const [sourceColumn, setSourceColumn] = useState<string | null>(null);
+
+  // Load from localStorage
+  useEffect(() => {
+    const savedTasks = localStorage.getItem("tasks");
+    if (savedTasks) {
+      setTasks(JSON.parse(savedTasks));
+    }
   }, []);
-useEffect(() => {
-  localStorage.setItem("tasks", JSON.stringify(tasks));
-}, [tasks]);
 
- const [draggedTask, setDraggedTask] = useState<string | null>(null);
- const [sourceColumn, setSourceColumn] = useState<string | null>(null);
- const [selectedTask, setSelectedTask] = useState<any | null>(null);
+  // Save to localStorage
+  useEffect(() => {
+    localStorage.setItem("tasks", JSON.stringify(tasks));
+  }, [tasks]);
+
+  // Drag start
   const handleDragStart = (task: any, column: string) => {
-    setDraggedTask(task);
-    setSourceColumn(column);
+  if (role === "viewer") return; // ❌ block
+  setDraggedTask(task);
+  setSourceColumn(column);
   };
 
+  // Drop (UPDATED)
   const handleDrop = (targetColumn: string) => {
     if (!draggedTask || !sourceColumn) return;
 
     const newTasks: any = { ...tasks };
 
+    // remove from source
     newTasks[sourceColumn] = newTasks[sourceColumn].filter(
-      (t: string) => t !== draggedTask
+      (t: any) => t !== draggedTask
     );
 
-    newTasks[targetColumn].push(draggedTask);
+    // default column
+    if (newTasks[targetColumn]) {
+      if (newTasks[targetColumn].length >= WIP_LIMIT) {
+        alert("WIP limit reached! Cannot move task.");
+          return;
+      }
+      newTasks[targetColumn].push(draggedTask);
+      setTasks(newTasks);
+    } 
+    // extra column
+    else {
+      const updatedExtra = extraColumns.map((col: any) => {
+        if (col.name === targetColumn) {
+          if (col.tasks.length >= WIP_LIMIT) {
+            alert("WIP limit reached!");
+          return col;
+        }
+          return {
+            ...col,
+            tasks: [...col.tasks, draggedTask]
+          };
+        }
+        return col;
+      });
 
-    setTasks(newTasks);
+      setExtraColumns(updatedExtra);
+      setTasks(newTasks);
+    }
   };
+
+  // Add Task (UPDATED)
   const addTask = (column: string) => {
+    const title = prompt("Enter task title");
+    if (!title) return;
 
-  const title = prompt("Enter task title");
-  if (!title) return;
+    const priority = prompt("Enter priority (Low / Medium / High)");
+    if (!priority) return;
 
-  const description = prompt("Enter task description");
-  if (!description) return;
-
-  const assignee = prompt("Assign task to");
-  if (!assignee) return;
-
-  const dueDate = prompt("Enter due date");
-  if (!dueDate) return;
-
-  const priority = prompt("Enter priority (Low / Medium / High)");
-  if (!priority) return;
-
-  const newTasks: any = { ...tasks };
-
-  newTasks[column].push({
-    title,
-    description,
-    assignee,
-    dueDate,
-    priority
-  });
-
-  setTasks(newTasks);
-
-};
-
-const deleteTask = (column: string, index: number) => {
+    const newTask = { title, priority };
 
     const newTasks: any = { ...tasks };
 
+    if (newTasks[column]) {
+      newTasks[column].push(newTask);
+      setTasks(newTasks);
+    } else {
+      const updatedExtra = extraColumns.map((col: any) => {
+        if (col.name === column) {
+          return {
+            ...col,
+            tasks: [...col.tasks, newTask]
+          };
+        }
+        return col;
+      });
+
+      setExtraColumns(updatedExtra);
+    }
+  };
+  
+  const editTask = (column: string, index: number) => {
+  if (role === "viewer") return;
+    const newTitle = prompt("Edit task title");
+    if (!newTitle) return;
+    const newTasks = { ...tasks };
+    newTasks[column][index].title = newTitle;
+
+      setTasks(newTasks);
+  };
+  const deleteTask = (column: string, index: number) => {
+  if (role === "viewer") return;
+    const newTasks = { ...tasks };
     newTasks[column].splice(index, 1);
 
     setTasks(newTasks);
+  };
+  // Add Column
+  const addColumn = () => {
+    const name = prompt("Enter column name");
+    if (!name) return;
 
- };
- const editTask = (column: string, index: number) => {
+    setExtraColumns([...extraColumns, { name, tasks: [] }]);
+  };
+  const renameColumn = (oldName: string) => {
+  const newName = prompt("Enter new column name", oldName);
+  if (!newName) return;
 
-  const newTitle = prompt("Enter new task title");
+  const updatedExtra = extraColumns.map((col: any) => {
+    if (col.name === oldName) {
+      return { ...col, name: newName };
+    }
+    return col;
+  });
 
-  if (!newTitle) return;
+    setExtraColumns(updatedExtra);
+  };
+  const deleteColumn = (name: string) => {
+    const updated = extraColumns.filter((col: any) => col.name !== name);
+    setExtraColumns(updated);
+  };
+  const [draggedColumn, setDraggedColumn] = useState<string | null>(null);
 
-  const newTasks: any = { ...tasks };
+  const handleColumnDrop = (target: string) => {
+    if (!draggedColumn) return;
 
-  newTasks[column][index].title = newTitle;
+      const cols = [...extraColumns];
+      const fromIndex = cols.findIndex(c => c.name === draggedColumn);
+      const toIndex = cols.findIndex(c => c.name === target);
 
-  setTasks(newTasks);
+      const [moved] = cols.splice(fromIndex, 1);
+      cols.splice(toIndex, 0, moved);
 
-};
+      setExtraColumns(cols);
+  };
 
   return (
+    
+    
     <div className={styles.boardContainer}>
-      
-      <h1 className={styles.boardTitle}>Project Board</h1>
+      <select onChange={(e) => setRole(e.target.value)}>
+         <option value="admin">Global Admin</option>
+        <option value="member">Project Member</option>
+        <option value="viewer">Project Viewer</option>
+      </select>
+
+      {/* Add Column Button */}
+      {role === "admin" && (
+        <button onClick={addColumn}>+ Add Column</button>
+      )}
 
       <div className={styles.board}>
 
-        {/* To Do Column */}
-        <div
-          className={styles.column}
-          onDragOver={(e) => e.preventDefault()}
-          onDrop={() => handleDrop("todo")}
-        >
-          <h3>To Do</h3>
+        {/* Default Columns */}
+        {Object.keys(tasks).map((col) => (
+          <div
+            key={col}
+            className={`${styles.column} ${
+              dragOverColumn === col ? styles.activeColumn : ""
+            }`}
+           onDragOver={(e) => {
+            e.preventDefault();
+            setDragOverColumn(col);
+          }}
+           onDragLeave={() => setDragOverColumn(null)}  
+           onDrop={() => {
+            handleDrop(col);
+            setDragOverColumn(null);
+          }}
 
-          <button
-            className={styles.addTaskBtn}
-            onClick={() => addTask("todo")}
           >
-            + Add Task
-          </button>
-
-          {tasks.todo.map((task: any , index) => (
-            <div
-              key={index}
-              className={styles.taskCard}
-              draggable
-              onDragStart={() => handleDragStart(task, "todo")}
-              onClick={() => setSelectedTask(task)}
-            >
-              <div>
-                <strong>{task.title}</strong>
-                <p>{task.description}</p>
-
-                <p>Assigned: {task.assignee}</p>
-
-                <p>Due: {task.dueDate}</p>
-
-                <span
-                    className={
-                    task.priority === "High"
-                       ? styles.high
-                       : task.priority === "Medium"
-                       ? styles.medium
-                       : styles.low
-                    }
-                >
-                    {task.priority}
-                </span>
-                <button
-                  className={styles.editBtn}
-                  onClick={() => editTask("todo", index)}
-                >
-                  ✏️
-                </button>
-
-                <button
-                  className={styles.deleteBtn}
-                  onClick={() => deleteTask("todo", index)}
-                >
-                  ❌
-                </button>
+            <h3>{col} ({tasks[col].length}/{WIP_LIMIT})</h3>
+            {role === "admin" && (
+              <div style={{ marginBottom: "10px" }}>
+                <button onClick={() => renameColumn(col)}>✏️</button>
+                  <button onClick={() => deleteColumn(col)}>🗑️</button>
               </div>
-            </div>
-          ))}
-        </div>
+            )}
 
-
-        {/* In Progress Column */}
-        <div
-          className={styles.column}
-          onDragOver={(e) => e.preventDefault()}
-          onDrop={() => handleDrop("progress")}
-        >
-          <h3>In Progress</h3>
-
-          <button
-            className={styles.addTaskBtn}
-            onClick={() => addTask("progress")}
-          >
-            + Add Task
-          </button>
-
-          {tasks.progress.map((task:any, index) => (
-            <div
-              key={index}
-              className={styles.taskCard}
-              draggable
-              onDragStart={() => handleDragStart(task, "progress")}
-            >
-              <div>
-                <strong>{task.title}</strong>
-                <span
-                  className={
-                  task.priority === "High"
-                   ? styles.high
-                   : task.priority === "Medium"
-                   ? styles.medium
-                   : styles.low
-                }
-                >
-                  {task.priority}
-                </span>
-              </div>
-            </div>
-          ))}
-        </div>
-
-
-        {/* Review Column */}
-        <div
-          className={styles.column}
-          onDragOver={(e) => e.preventDefault()}
-          onDrop={() => handleDrop("review")}
-        >
-          <h3>Review</h3>
-
-          <button
-            className={styles.addTaskBtn}
-            onClick={() => addTask("review")}
-          >
-            + Add Task
-          </button>
-
-          {tasks.review.map((task:any, index) => (
-            <div
-              key={index}
-              className={styles.taskCard}
-              draggable
-              onDragStart={() => handleDragStart(task, "review")}
-            >
-              <div>
-                <strong>{task.title}</strong>
-                <span
-                    className={
-                        task.priority == "High"
-                          ? styles.high
-                          : task.priority === "Medium"
-                          ? styles.medium
-                          : styles.low
-                    }
-                >
-                    {task.priority}
-                </span>
-                  
-            </div>
-            </div>
-          ))}
-        </div>
-
-
-        {/* Done Column */}
-        <div
-          className={styles.column}
-          onDragOver={(e) => e.preventDefault()}
-          onDrop={() => handleDrop("done")}
-        >
-          <h3>Done</h3>
-
-          <button
-            className={styles.addTaskBtn}
-            onClick={() => addTask("done")}
-          >
-            + Add Task
-          </button>
-
-          {tasks.done.map((task:any, index) => (
-            <div
-              key={index}
-              className={styles.taskCard}
-              draggable
-              onDragStart={() => handleDragStart(task, "done")}
-            >
-              <div>
-                <strong>{task.title}</strong>
-                <span
-                  className = {
-                    task.priority == "High"
-                     ? styles.high
-                     : task.priority === "Medium"
-                     ? styles.medium
-                     : styles.low
-                  }
-                >
-                    {task.priority}
-                   
-                  </span>
-            </div>
-            </div>
-          ))}
-        </div>
-      </div>
-      {selectedTask && (
-        <div className={styles.modalOverlay}>
-          <div className={styles.modal}>
-            <h2>{selectedTask.title}</h2>
-
-            <p>{selectedTask.description}</p>
-
-            <p><strong>Assigned:</strong> {selectedTask.assignee}</p>
-
-            <p><strong>Due:</strong> {selectedTask.dueDate}</p>
-
-            <p><strong>Priority:</strong> {selectedTask.priority}</p>
-
-            <button onClick={() => setSelectedTask(null)}>
-                Close
+            <button onClick={() => addTask(col)}>
+              + Add Task
             </button>
-        </div>
+
+            {tasks[col].map((task: any, index: number) => (
+              <div
+                key={index}
+                className={styles.taskCard}
+                draggable
+                onDragStart={() => handleDragStart(task, col)}
+              >
+                <strong>{task.title}</strong>
+                <p>{task.priority}</p>
+                {role !== "viewer" && (
+                  <div>
+                    <button onClick={() => editTask(col, index)}>✏️</button>
+                    <button onClick={() => deleteTask(col, index)}>🗑️</button>
+                  </div>
+                )}
+              </div> 
+            ))}
+          </div>
+        ))}
+
+        {/* Extra Columns */}
+        {extraColumns.map((col, index) => (
+          <div
+            key={index}
+            className={`${styles.column} ${
+              dragOverColumn === col.name ? styles.activeColumn : ""
+            }`}
+            onDragOver={(e) => {
+              e.preventDefault();
+              setDragOverColumn(col.name);
+            }}
+           onDragLeave={() => setDragOverColumn(null)}
+            onDrop={() => {
+              handleColumnDrop(col.name);
+              setDragOverColumn(null);
+            }}
+          >
+          <div style={{ display: "flex", justifyContent: "space-between" }}>
+            <h3>{col.name}</h3>
+
+            {role === "admin" && (
+            <div>
+              <button onClick={() => renameColumn(col.name)}>✏️</button>
+               <button onClick={() => deleteColumn(col.name)}>❌</button>
+            </div>
+            )}
+          </div>
+
+            {role !== "viewer" && (
+               <button onClick={() => addTask(col.name)}>+ Add Task</button>
+            )}
+
+            {col.tasks.map((task: any, i: number) => (
+              <div
+                key={i}
+                className={styles.taskCard}
+                draggable
+                onDragStart={() => handleDragStart(task, col.name)}
+              >
+                <strong>{task.title}</strong>
+                <p>{task.priority}</p>
+                {role !== "viewer" && (
+                <div>
+                  <button onClick={() => {
+                    const updated = extraColumns.map((c: any) => {
+                      if (c.name === col.name) {
+                        c.tasks[i].title = prompt("Edit task") || c.tasks[i].title;
+                      }
+                      return c;
+                    });
+                      setExtraColumns(updated);
+                      }}>✏️</button>
+                        <button onClick={() => {
+                        const updated = extraColumns.map((c: any) => {
+                          if (c.name === col.name) {
+                            c.tasks.splice(i, 1);
+                          }
+                          return c;
+                      });
+                     setExtraColumns(updated);
+                      }}>🗑️</button>
+                  </div>
+                  )}
+              </div>
+            ))}
+          </div>
+        ))}
+
       </div>
-    )}
-   </div>       
+    </div>
   );
 }
 

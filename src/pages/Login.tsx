@@ -6,14 +6,14 @@ function Login() {
 
   const navigate = useNavigate();   // added
 
-  const [email, setEmail] = useState("");
+  const [usernameOrEmail, setUsernameOrEmail] = useState("");
   const [password, setPassword] = useState("");
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    console.log(email, password);
+    console.log(usernameOrEmail, password);
 
-    if (email && password) {
+    if (usernameOrEmail && password) {
       navigate("/dashboard");   // added
     }
   };
@@ -27,9 +27,10 @@ function Login() {
           <div className={styles.inputGroup}>
             <label>Email</label>
             <input
-              type="email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
+              type="text"
+              placeholder="Enter username or email"
+              value={usernameOrEmail}
+              onChange={(e) => setUsernameOrEmail(e.target.value)}
             />
           </div>
 
