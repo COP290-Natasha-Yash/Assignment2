@@ -1,19 +1,17 @@
 import express from 'express';
 
+// Importing individual route handlers for each notification operation
 import getAllRouter from './getAll';
 import getOneRouter from './getOne';
-import getReadRouter from './getRead';
-import getUnreadRouter from './getUnread';
+import markRouter from './mark';
 
-import markReadRouter from './markRead';
-
+// Creating a single router instance to combine all notification-related routes
 const router = express.Router();
 
+// Mounting each notification route onto the main router
 router.use(getAllRouter);
-router.use(getReadRouter);
-router.use(getUnreadRouter);
-router.use(getOneRouter); //We have to keep the getOne beneath the Read and Unread routers because,
-//if we didn't when i write get api/notifications/read -> it assumes read is an id and throws 404 error
-router.use(markReadRouter);
+router.use(getOneRouter);
+router.use(markRouter);
 
+// Exporting the combined notification router to be used in the main app
 export default router;

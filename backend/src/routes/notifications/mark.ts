@@ -4,8 +4,8 @@ import { prisma } from '../../prisma';
 
 const router = express.Router();
 
-// Handles GET /:notificationId — retrieves a single notification for the current user
-router.get('/:notificationId', async (req: Request, res: Response) => {
+// Handles PATCH /:notificationId — marks a notification as read or unread
+router.patch('/:notificationId', async (req: Request, res: Response) => {
   try {
     // Grabbing the notification ID from the route params
     const notificationId = req.params.notificationId as string;
@@ -35,10 +35,25 @@ router.get('/:notificationId', async (req: Request, res: Response) => {
       return;
     }
 
-    res.status(200).json(notification);
+    // Validating that a boolean value was provided in the request body
+    const { bool } = req.body;
+    if (typeof bool !== 'boolean') {
+      res.status(400).json({
+        error: { message: 'A Boolean Value is Required', code: 'BAD_REQUEST' },
+      });
+      return;
+    }
+
+    // Updating the read status of the notification
+    const updatedNotification = await prisma.notification.update({
+      where: { id: notificationId },
+      data: { read: bool },
+    });
+
+    res.status(200).json(updatedNotification);
   } catch (error) {
     // Something unexpected went wrong — log it and return a generic 500
-    console.error('Get notification error:', error);
+    console.error('Update notification error:', error);
     res.status(500).json({
       error: { message: 'Internal Server Error', code: 'INTERNAL_ERROR' },
     });

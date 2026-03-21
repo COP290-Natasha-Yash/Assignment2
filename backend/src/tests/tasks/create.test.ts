@@ -165,20 +165,22 @@ describe('POST /api/projects/:id/boards/:boardId/columns/:columnId/tasks', () =>
     );
   });
 
-  it('6. Should fail if reporter is not a project member', async () => {
-    const stranger = await seedUser('Stranger', 's@t.com', 'stranger', 'p123');
+  it('6. SECURITY CHECK: Should fail with 403 if a non-member tries to create a task', async () => {
+    // 1. Seed and login the stranger
+    await seedUser('Stranger', 'stranger@test.com', 'stranger', 'p123');
+    // (Ensure your loginUser helper expects the email or username based on how you wrote it!)
+    const strangerCookie = (await loginUser('stranger', 'p123')) as string;
 
     const res = await request(app)
       .post(
         `/api/projects/${projectId}/boards/${boardId}/columns/${columnId}/tasks`
       )
-      .set('Cookie', adminCookie)
-      .send({ title: 'Ghost Task', reporterId: stranger.id });
+      .set('Cookie', strangerCookie)
+      .send({ title: 'Ghost Task' });
 
-    expect(res.status).toBe(400);
-    expect(res.body.error.message).toContain(
-      'Reporter Must Be a Project "ADMIN" or "MEMBER"'
-    );
+    // 2. The requireProjectRole middleware should block this instantly
+    expect(res.status).toBe(403);
+    expect(res.body.error.code).toBe('FORBIDDEN');
   });
 
   it('7. Should fail if dueDate is not in the future', async () => {

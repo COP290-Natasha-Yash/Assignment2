@@ -2,38 +2,57 @@ import express, { Request, Response } from 'express';
 
 import { prisma } from '../../prisma';
 
+// Importing role-based middleware to restrict this route to all project members
 import { requireProjectRole } from '../../middleware/roles';
 
 const router = express.Router();
 
+// Handles GET /:id/boards/:boardId/columns — retrieves all columns for a given board
 router.get(
   '/:id/boards/:boardId/columns',
   requireProjectRole(['ADMIN', 'MEMBER', 'VIEWER']),
   async (req: Request, res: Response) => {
-    const projectId = req.params.id as string;
+    try {
+      // Grabbing the project ID from the route params
+      const projectId = req.params.id as string;
 
-    const boardId = req.params.boardId as string;
-    const board = await prisma.board.findUnique({ where: { id: boardId } });
-    if (!board) {
-      res
-        .status(404)
-        .json({ error: { message: 'Board Not Found', code: 'NOT_FOUND' } });
-      return;
-    }
+      // Grabbing the board ID from the route params
+      const boardId = req.params.boardId as string;
 
-    if (board.projectId !== projectId) {
-      res.status(404).json({
-        error: {
-          message: 'Board Not Found',
-          code: 'NOT_FOUND',
-        },
+      // Looking up the board to make sure it exists
+      const board = await prisma.board.findUnique({ where: { id: boardId } });
+      if (!board) {
+        res
+          .status(404)
+          .json({ error: { message: 'Board Not Found', code: 'NOT_FOUND' } });
+        return;
+      }
+
+      // Making sure the board actually belongs to the given project
+      if (board.projectId !== projectId) {
+        res.status(404).json({
+          error: {
+            message: 'Board Not Found',
+            code: 'NOT_FOUND',
+          },
+        });
+        return;
+      }
+
+      // Fetching all columns for this board sorted by order ascending
+      const columns = await prisma.column.findMany({
+        where: { boardId },
+        orderBy: { order: 'asc' },
       });
-      return;
+
+      res.status(200).json(columns);
+    } catch (error) {
+      // Something unexpected went wrong — log it and return a generic 500
+      console.error('Get Columns Error:', error);
+      res.status(500).json({
+        error: { message: 'Internal Server Error', code: 'INTERNAL_ERROR' },
+      });
     }
-
-    const columns = await prisma.column.findMany({ where: { boardId } });
-
-    res.status(200).json(columns);
   }
 );
 
