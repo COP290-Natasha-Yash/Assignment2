@@ -54,7 +54,7 @@ describe('GET /api/notifications (General Inbox)', () => {
     expect(res.status).toBe(200);
     expect(res.body.length).toBe(2);
     // Verify we have a mix of statuses
-    const statuses = res.body.map((n: any) => n.read);
+    const statuses = res.body.map((n: { read: boolean }) => n.read);
     expect(statuses).toContain(true);
     expect(statuses).toContain(false);
   });

@@ -6,7 +6,8 @@ import { prisma } from '../../prisma';
 const router = express.Router();
 
 const JWT_SECRET = process.env.JWT_SECRET || 'supersecret';
-const JWT_REFRESH_SECRET = process.env.JWT_REFRESH_SECRET || 'supersecretrefresh';
+const JWT_REFRESH_SECRET =
+  process.env.JWT_REFRESH_SECRET || 'supersecretrefresh';
 
 router.post('/refresh', async (req: Request, res: Response) => {
   const refreshToken = req.cookies.refreshToken;

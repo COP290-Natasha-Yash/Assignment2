@@ -10,8 +10,6 @@ router.get(
   '/:id/members',
   requireProjectRole(['ADMIN', 'MEMBER']),
   async (req: Request, res: Response) => {
-    const userId = req.userId;
-
     const projectId = req.params.id as string;
     const project = await prisma.project.findUnique({
       where: { id: projectId },

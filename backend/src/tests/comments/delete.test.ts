@@ -11,7 +11,6 @@ import {
 } from '../helpers/testHelpers';
 
 let adminCookie: string;
-let memberCookie: string;
 let adminId: string;
 let memberId: string;
 let projectId: string;
@@ -61,7 +60,6 @@ beforeAll(async () => {
 
   // Note: Adjust loginUser helper usage if it doesn't take raw passwords easily.
   // For the sake of the test, we assume memberCookie is properly authenticated as 'memberId'
-  memberCookie = await loginUser('memberuser', 'hashedpassword');
 });
 
 beforeEach(async () => {

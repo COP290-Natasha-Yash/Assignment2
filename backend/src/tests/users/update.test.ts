@@ -1,22 +1,14 @@
 import request from 'supertest';
 import app from '../../index';
-import { prisma } from '../../prisma';
 import { clearDatabase, seedUser, loginUser } from '../helpers/testHelpers';
 import path from 'path';
 import fs from 'fs';
 
 let userCookie: string;
-let userId: string;
 
 beforeAll(async () => {
   await clearDatabase();
-  const user = await seedUser(
-    'Original Name',
-    'update@test.com',
-    'update_u',
-    'pass123'
-  );
-  userId = user.id;
+  await seedUser('Original Name', 'update@test.com', 'update_u', 'pass123');
   userCookie = await loginUser('update_u', 'pass123');
 
   // Create a dummy file for testing uploads if it doesn't exist
@@ -38,7 +30,7 @@ describe('PATCH /api/users/me (Multipart Upload)', () => {
     const res = await request(app)
       .patch('/api/users/me')
       .set('Cookie', userCookie)
-      .field('name', 'Yash Vaishnav'); // ✨ Use .field for text in multipart forms
+      .field('name', 'Yash Vaishnav'); //We Use .field for text in multipart forms
 
     expect(res.status).toBe(200);
     expect(res.body.name).toBe('Yash Vaishnav');
@@ -48,7 +40,7 @@ describe('PATCH /api/users/me (Multipart Upload)', () => {
     const res = await request(app)
       .patch('/api/users/me')
       .set('Cookie', userCookie)
-      .attach('avatar', path.join(__dirname, 'dummy.jpg')); // ✨ Use .attach for files
+      .attach('avatar', path.join(__dirname, 'dummy.jpg')); // Use .attach for files
 
     expect(res.status).toBe(200);
     expect(res.body.avatar).toMatch(/^\/uploads\//); // Should start with /uploads/

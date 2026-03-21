@@ -114,7 +114,7 @@ describe('GET /api/projects/:id/tasks/:taskId/comments/:commentId', () => {
 
   it('4. should return 404 if the task is in a different project (IDOR Protection)', async () => {
     const otherProject = await seedProject('Other Project');
-    const otherBoard = await seedBoard(otherProject.id);
+    await seedBoard(otherProject.id);
     const otherCol = await prisma.column.findFirst({
       where: { board: { projectId: otherProject.id } },
     });

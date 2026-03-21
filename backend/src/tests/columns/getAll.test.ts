@@ -39,7 +39,7 @@ describe('GET /api/projects/:id/boards/:boardId/columns', () => {
     expect(Array.isArray(response.body)).toBe(true);
     expect(response.body.length).toBe(5);
 
-    const names = response.body.map((c: any) => c.name);
+    const names = response.body.map((c: { name: string }) => c.name);
     expect(names).toContain('TO_DO');
     expect(names).toContain('CLOSED');
   });

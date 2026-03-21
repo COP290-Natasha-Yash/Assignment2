@@ -74,7 +74,7 @@ describe('GET /api/projects/:id/boards/:boardId/columns/:columnId/tasks/:taskId/
     expect(res.body.length).toBe(2);
 
     // Ensure the mapping logic works to differentiate them on the frontend
-    const types = res.body.map((item: any) => item.type);
+    const types = res.body.map((item: { type: string }) => item.type);
     expect(types).toContain('COMMENT');
     expect(types).toContain('AUDIT');
   });
