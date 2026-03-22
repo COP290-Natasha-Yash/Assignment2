@@ -1,0 +1,243 @@
+/* =========================================
+   MEMBERS MODULE CSS
+========================================= */
+
+.activeNav {
+  background: rgba(255, 255, 255, 0.15);
+  border-radius: 6px;
+  padding: 4px 8px;
+  font-weight: 700;
+  color: white !important;
+}
+
+/* Two-column layout: members list + add panel */
+.membersLayout {
+  display: flex;
+  gap: 24px;
+  align-items: flex-start;
+  height: calc(100vh - 160px);
+}
+
+.membersPanel {
+  flex: 1;
+  min-width: 0;
+  background: white;
+  border-radius: 12px;
+  padding: 24px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  height: 100%;
+  overflow: hidden;
+}
+
+.panelHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.membersList {
+  flex: 1;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.memberRow {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 10px;
+  border-radius: 8px;
+  transition: background 0.2s;
+}
+
+.memberRow:hover {
+  background: #f8fafc;
+}
+
+.memberInfo {
+  flex: 1;
+  min-width: 0;
+}
+
+.memberName {
+  font-weight: 600;
+  font-size: 14px;
+  color: #1e293b;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.memberUsername {
+  font-size: 12px;
+  color: #94a3b8;
+}
+
+.roleSelect {
+  padding: 5px 8px;
+  border-radius: 6px;
+  border: 1px solid #e5e7eb;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  background: white;
+  min-width: 90px;
+}
+
+.rolePill {
+  padding: 4px 10px;
+  border-radius: 20px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  white-space: nowrap;
+}
+
+.removeBtn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 16px;
+  opacity: 0.5;
+  transition: opacity 0.2s;
+  padding: 4px;
+  border-radius: 4px;
+  flex-shrink: 0;
+}
+
+.removeBtn:hover {
+  opacity: 1;
+  background: #fee2e2;
+}
+
+/* RIGHT PANEL */
+.addPanel {
+  width: 340px;
+  flex-shrink: 0;
+  background: white;
+  border-radius: 12px;
+  padding: 24px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  height: 100%;
+  overflow: hidden;
+}
+
+.addPanelTitle {
+  font-size: 17px;
+  font-weight: 700;
+  color: #1e293b;
+  margin: 0;
+}
+
+.addRoleRow {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.userPickerList {
+  flex: 1;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.userPickerRow {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 8px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.userPickerRow:hover {
+  background: #f0f4ff;
+}
+
+.quickAddBtn {
+  margin-left: auto;
+  padding: 5px 12px;
+  background: #4f46e5;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.quickAddBtn:hover {
+  background: #4338ca;
+}
+
+.activeAddBtn {
+  background: #ef4444 !important;
+}
+
+/* Profile view inside right panel */
+.profileView {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding-top: 10px;
+}
+
+.backBtn {
+  background: none;
+  border: none;
+  color: #6366f1;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  padding: 0;
+  text-align: left;
+  align-self: flex-start;
+}
+
+.backBtn:hover {
+  color: #4338ca;
+}
+
+/* Role badge in BoardsPage topbar */
+.roleBadge {
+  display: inline-flex;
+  align-items: center;
+  padding: 4px 12px;
+  border-radius: 20px;
+  color: white;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+}
+.navItem {
+  cursor: pointer;
+  padding: 6px 8px;
+  border-radius: 6px;
+  transition: background 0.2s;
+}
+
+.navItem:hover {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.activeNav {
+  background: rgba(255, 255, 255, 0.15);
+  border-radius: 6px;
+  padding: 6px 8px;
+  font-weight: 700;
+  color: white !important;
+}
