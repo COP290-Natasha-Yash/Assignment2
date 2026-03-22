@@ -26,8 +26,8 @@ router.patch(
       }
 
       // Validating that a boolean value was provided in the request body
-      const { bool } = req.body;
-      if (typeof bool !== 'boolean') {
+      const { archived } = req.body;
+      if (typeof archived !== 'boolean') {
         res.status(400).json({
           error: {
             message: 'A Boolean Value is Required',
@@ -38,7 +38,7 @@ router.patch(
       }
 
       // Preventing archiving a project that is already archived
-      if (project.archived && bool) {
+      if (project.archived && archived) {
         res.status(400).json({
           error: {
             message: 'Project is Already Archived',
@@ -49,7 +49,7 @@ router.patch(
       }
 
       // Preventing unarchiving a project that is already unarchived
-      if (!project.archived && !bool) {
+      if (!project.archived && !archived) {
         res.status(400).json({
           error: {
             message: 'Project is Already Unarchived',
@@ -60,12 +60,12 @@ router.patch(
       }
 
       // Updating the archived status of the project
-      const updated_project = await prisma.project.update({
+      const updatedProject = await prisma.project.update({
         where: { id },
-        data: { archived: bool },
+        data: { archived },
       });
 
-      res.status(200).json(updated_project);
+      res.status(200).json(updatedProject);
     } catch (error) {
       // Something unexpected went wrong — log it and return a generic 500
       console.error('Archive project error:', error);

@@ -36,6 +36,14 @@ router.post('/register', async (req: Request, res: Response) => {
       return;
     }
 
+    // Email should contain @
+    if (!email.trim().includes('@')) {
+      res.status(400).json({
+        error: { message: 'Invalid Email Format', code: 'BAD_REQUEST' },
+      });
+      return;
+    }
+
     // Checking if the email is already in use
     const existingEmail = await prisma.user.findUnique({
       where: { email: email.trim() },
@@ -47,6 +55,16 @@ router.post('/register', async (req: Request, res: Response) => {
       return;
     }
 
+    // Username should not contain spaces or @
+    if (username.trim().includes(' ') || username.trim().includes('@')) {
+      res.status(400).json({
+        error: {
+          message: 'Username Cannot Contain Spaces or @',
+          code: 'BAD_REQUEST',
+        },
+      });
+      return;
+    }
     // Checking if the username is already taken
     const existingUsername = await prisma.user.findUnique({
       where: { username: username.trim() },

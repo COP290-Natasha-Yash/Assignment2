@@ -10,7 +10,7 @@ async function main() {
     create: {
       name: 'Global Admin',
       email: 'admin@taskboard.com',
-      username: 'admin',
+      username: '_admin_',
       password: hashedPassword,
       globalRole: 'GLOBAL_ADMIN'
     }

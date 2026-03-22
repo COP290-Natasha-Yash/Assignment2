@@ -10,6 +10,7 @@ import commentsRouter from './routes/comments';
 import notificationsRouter from './routes/notifications';
 import membersRouter from './routes/members';
 import usersRouter from './routes/users';
+import cors from 'cors';
 
 import path from 'path';
 
@@ -18,6 +19,13 @@ const app = express();
 app.use(express.json());
 
 app.use(cookieParser());
+
+app.use(
+  cors({
+    origin: 'http://localhost:5173',
+    credentials: true,
+  })
+);
 
 app.use('/api/auth', authRouter);
 app.use('/api/projects', authenticate, projectsRouter);
