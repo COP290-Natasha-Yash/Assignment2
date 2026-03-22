@@ -137,3 +137,10 @@ dist
 # Vite logs files
 vite.config.js.timestamp-*
 vite.config.ts.timestamp-*
+
+# Custom Uploads & Test Files
+uploads/
+public/uploads/
+src/tests/**/dummy.jpg
+
+echo "*.db" >> .gitignore
