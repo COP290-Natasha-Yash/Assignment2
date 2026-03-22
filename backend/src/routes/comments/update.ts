@@ -8,6 +8,8 @@ import { auditLog } from '../../utils/auditLog';
 // Importing role-based middleware to restrict this route to project admins and members only
 import { requireProjectRole } from '../../middleware/roles';
 
+import { createNotification } from '../../utils/createNotification';
+
 const router = express.Router();
 
 // Handles PATCH /:id/tasks/:taskId/comments/:commentId — updates a comment on a task
@@ -84,7 +86,48 @@ router.patch(
       });
 
       // Logging the comment update in the audit log
-      await auditLog(taskId, req.userId!, 'COMMENT_EDITED', comment.content, content.trim());
+      await auditLog(
+        taskId,
+        req.userId!,
+        'COMMENT_EDITED',
+        comment.content,
+        content.trim()
+      );
+
+      // Extracting @mentions from the updated comment content
+      const mentions = content.trim().match(/@(\w+)/g);
+      if (mentions) {
+        const usernames = mentions.map((m: string) => m.slice(1));
+
+        const mentionedUsers = await prisma.user.findMany({
+          where: { username: { in: usernames } },
+          select: { id: true, username: true },
+        });
+
+        const projectMemberIds = await prisma.projectMember.findMany({
+          where: { projectId, userId: { in: mentionedUsers.map((u) => u.id) } },
+          select: { userId: true },
+        });
+
+        const memberIdSet = new Set(projectMemberIds.map((m) => m.userId));
+
+        for (const user of mentionedUsers) {
+          if (user.id !== req.userId && memberIdSet.has(user.id)) {
+            await createNotification(
+              user.id,
+              `You Were Mentioned in a Comment: "${task.title}"`,
+              task
+            );
+          }
+        }
+      }
+      if (task.assigneeId && task.assigneeId !== req.userId) {
+        await createNotification(
+          task.assigneeId,
+          `New Comment on Your task: "${task.title}"`,
+          task
+        );
+      }
 
       res.status(200).json(updatedComment);
     } catch (error) {

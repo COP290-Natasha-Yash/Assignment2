@@ -2,7 +2,7 @@ import express, { Request, Response } from 'express';
 
 import { prisma } from '../../prisma';
 
-const router = express.Router()
+const router = express.Router();
 
 // Handles GET /me/tasks — returns all tasks assigned to the currently logged-in user across all projects
 router.get('/me/tasks', async (req: Request, res: Response) => {
@@ -16,7 +16,14 @@ router.get('/me/tasks', async (req: Request, res: Response) => {
         assigneeId: userId,
       },
       // Including project info so the frontend knows which project each task belongs to
-      include: {column : { include: {board: {include: {project: {select: {id: true, name:true}}}}}}
+      include: {
+        column: {
+          include: {
+            board: {
+              include: { project: { select: { id: true, name: true } } },
+            },
+          },
+        },
       },
       // Newest tasks first
       orderBy: {

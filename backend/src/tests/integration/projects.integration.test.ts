@@ -7,7 +7,6 @@ beforeEach(async () => {
   await setupEach();
 });
 
-
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
 async function registerAndLogin(
@@ -129,7 +128,9 @@ describe('Projects Integration Tests', () => {
         .set('Cookie', memberCookies);
 
       expect(res.status).toBe(200);
-      expect(res.body.some((p: { id: string }) => p.id === projectId)).toBe(true);
+      expect(res.body.some((p: { id: string }) => p.id === projectId)).toBe(
+        true
+      );
     });
   });
 

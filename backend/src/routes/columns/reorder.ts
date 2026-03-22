@@ -79,24 +79,23 @@ router.patch(
         return;
       }
 
-
-// Using a transaction to update all column orders atomically in a single pass
-await prisma.$transaction(async (tx) => {
-  // First pass: offset all orders by a large number to avoid unique constraint conflicts
-  for (const col of columns) {
-    await tx.column.update({
-      where: { id: col.id },
-      data: { order: col.order + 1000 },
-    });
-  }
-  // Second pass: set the actual target orders
-  for (const col of columns) {
-    await tx.column.update({
-      where: { id: col.id },
-      data: { order: col.order },
-    });
-  }
-});
+      // Using a transaction to update all column orders atomically in a single pass
+      await prisma.$transaction(async (tx) => {
+        // First pass: offset all orders by a large number to avoid unique constraint conflicts
+        for (const col of columns) {
+          await tx.column.update({
+            where: { id: col.id },
+            data: { order: col.order + 1000 },
+          });
+        }
+        // Second pass: set the actual target orders
+        for (const col of columns) {
+          await tx.column.update({
+            where: { id: col.id },
+            data: { order: col.order },
+          });
+        }
+      });
 
       res.status(200).json({ message: 'Columns Reordered Successfully' });
     } catch (error) {

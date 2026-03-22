@@ -7,7 +7,6 @@ beforeEach(async () => {
   await setupEach();
 });
 
-
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
 async function registerAndLogin(
@@ -17,7 +16,10 @@ async function registerAndLogin(
   password = 'password123'
 ) {
   const res = await request(app).post('/api/auth/register').send({
-    name, email, username, password,
+    name,
+    email,
+    username,
+    password,
   });
   return {
     cookies: res.headers['set-cookie'] as unknown as string[],
@@ -328,7 +330,9 @@ describe('Columns Integration Tests', () => {
   describe('PATCH /api/projects/:id/boards/:boardId/columns/:columnId', () => {
     it('should update column name', async () => {
       const res = await request(app)
-        .patch(`/api/projects/${projectId}/boards/${boardId}/columns/${columnId}`)
+        .patch(
+          `/api/projects/${projectId}/boards/${boardId}/columns/${columnId}`
+        )
         .set('Cookie', adminCookies)
         .send({ name: 'BACKLOG' });
 
@@ -338,7 +342,9 @@ describe('Columns Integration Tests', () => {
 
     it('should update WIP limit', async () => {
       const res = await request(app)
-        .patch(`/api/projects/${projectId}/boards/${boardId}/columns/${columnId}`)
+        .patch(
+          `/api/projects/${projectId}/boards/${boardId}/columns/${columnId}`
+        )
         .set('Cookie', adminCookies)
         .send({ wipLimit: 5 });
 
@@ -350,13 +356,17 @@ describe('Columns Integration Tests', () => {
       // Create 3 tasks in the column first
       for (let i = 0; i < 3; i++) {
         await request(app)
-          .post(`/api/projects/${projectId}/boards/${boardId}/columns/${columnId}/tasks`)
+          .post(
+            `/api/projects/${projectId}/boards/${boardId}/columns/${columnId}/tasks`
+          )
           .set('Cookie', adminCookies)
           .send({ title: `Task ${i}`, type: 'TASK', priority: 'MEDIUM' });
       }
 
       const res = await request(app)
-        .patch(`/api/projects/${projectId}/boards/${boardId}/columns/${columnId}`)
+        .patch(
+          `/api/projects/${projectId}/boards/${boardId}/columns/${columnId}`
+        )
         .set('Cookie', adminCookies)
         .send({ wipLimit: 1 });
 
@@ -373,7 +383,9 @@ describe('Columns Integration Tests', () => {
         .send({ name: 'TO_DELETE' });
 
       const res = await request(app)
-        .delete(`/api/projects/${projectId}/boards/${boardId}/columns/${newColRes.body.id}`)
+        .delete(
+          `/api/projects/${projectId}/boards/${boardId}/columns/${newColRes.body.id}`
+        )
         .set('Cookie', adminCookies);
 
       expect(res.status).toBe(200);
@@ -385,10 +397,14 @@ describe('Columns Integration Tests', () => {
         .get(`/api/projects/${projectId}/boards/${boardId}/columns`)
         .set('Cookie', adminCookies);
 
-      const closedCol = colsRes.body.find((c: { order: number }) => c.order === 99);
+      const closedCol = colsRes.body.find(
+        (c: { order: number }) => c.order === 99
+      );
 
       const res = await request(app)
-        .delete(`/api/projects/${projectId}/boards/${boardId}/columns/${closedCol.id}`)
+        .delete(
+          `/api/projects/${projectId}/boards/${boardId}/columns/${closedCol.id}`
+        )
         .set('Cookie', adminCookies);
 
       expect(res.status).toBe(403);
@@ -401,7 +417,9 @@ describe('Columns Integration Tests', () => {
         .get(`/api/projects/${projectId}/boards/${boardId}/columns`)
         .set('Cookie', adminCookies);
 
-      const regularCols = colsRes.body.filter((c: { order: number }) => c.order !== 99);
+      const regularCols = colsRes.body.filter(
+        (c: { order: number }) => c.order !== 99
+      );
       // Reverse the order
       const reordered = regularCols.map((col: { id: string }, i: number) => ({
         id: col.id,

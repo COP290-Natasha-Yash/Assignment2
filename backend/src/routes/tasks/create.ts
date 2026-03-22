@@ -64,7 +64,9 @@ router.post(
       }
 
       // Checking if the column has reached its WIP limit before allowing a new task
-      const taskCount = await prisma.task.count({ where: { columnId, type: {not : 'STORY'} } });
+      const taskCount = await prisma.task.count({
+        where: { columnId, type: { not: 'STORY' } },
+      });
       if (column.wipLimit && taskCount >= column.wipLimit) {
         res.status(400).json({
           error: {

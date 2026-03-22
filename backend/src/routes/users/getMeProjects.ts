@@ -14,16 +14,16 @@ router.get('/me/projects', async (req: Request, res: Response) => {
       where: { userId },
       include: {
         project: {
-          select: { id: true, name: true }
-        }
-      }
+          select: { id: true, name: true },
+        },
+      },
     });
 
-    res.status(200).json(memberships.map(m => m.project));
+    res.status(200).json(memberships.map((m) => m.project));
   } catch (error) {
     console.error('Fetch user projects error:', error);
     res.status(500).json({
-      error: { message: 'Internal Server Error', code: 'INTERNAL_ERROR' }
+      error: { message: 'Internal Server Error', code: 'INTERNAL_ERROR' },
     });
   }
 });

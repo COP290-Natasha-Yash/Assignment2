@@ -7,7 +7,6 @@ beforeEach(async () => {
   await setupEach();
 });
 
-
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
 async function registerAndLogin(
@@ -17,7 +16,10 @@ async function registerAndLogin(
   password = 'password123'
 ) {
   const res = await request(app).post('/api/auth/register').send({
-    name, email, username, password,
+    name,
+    email,
+    username,
+    password,
   });
   return {
     cookies: res.headers['set-cookie'] as unknown as string[],
@@ -85,9 +87,15 @@ async function setupBoard(suffix: string): Promise<BoardSetup> {
     .get(`/api/projects/${projectId}/boards/${boardId}/columns`)
     .set('Cookie', admin.cookies);
 
-  const todoColumnId = colsRes.body.find((c: { name: string }) => c.name === 'TO_DO').id;
-  const inProgressColumnId = colsRes.body.find((c: { name: string }) => c.name === 'IN_PROGRESS').id;
-  const closedColumnId = colsRes.body.find((c: { order: number }) => c.order === 99).id;
+  const todoColumnId = colsRes.body.find(
+    (c: { name: string }) => c.name === 'TO_DO'
+  ).id;
+  const inProgressColumnId = colsRes.body.find(
+    (c: { name: string }) => c.name === 'IN_PROGRESS'
+  ).id;
+  const closedColumnId = colsRes.body.find(
+    (c: { order: number }) => c.order === 99
+  ).id;
 
   return {
     adminCookies: admin.cookies,
@@ -113,7 +121,9 @@ describe('Tasks Integration Tests', () => {
   describe('POST /api/projects/:id/boards/:boardId/columns/:columnId/tasks', () => {
     it('should create a task and return 201', async () => {
       const res = await request(app)
-        .post(`/api/projects/${setup.projectId}/boards/${setup.boardId}/columns/${setup.todoColumnId}/tasks`)
+        .post(
+          `/api/projects/${setup.projectId}/boards/${setup.boardId}/columns/${setup.todoColumnId}/tasks`
+        )
         .set('Cookie', setup.adminCookies)
         .send({ title: 'My Task', type: 'TASK', priority: 'MEDIUM' });
 
@@ -125,7 +135,9 @@ describe('Tasks Integration Tests', () => {
 
     it('should create a BUG task', async () => {
       const res = await request(app)
-        .post(`/api/projects/${setup.projectId}/boards/${setup.boardId}/columns/${setup.todoColumnId}/tasks`)
+        .post(
+          `/api/projects/${setup.projectId}/boards/${setup.boardId}/columns/${setup.todoColumnId}/tasks`
+        )
         .set('Cookie', setup.adminCookies)
         .send({ title: 'My Bug', type: 'BUG', priority: 'HIGH' });
 
@@ -135,7 +147,9 @@ describe('Tasks Integration Tests', () => {
 
     it('should create a STORY task', async () => {
       const res = await request(app)
-        .post(`/api/projects/${setup.projectId}/boards/${setup.boardId}/columns/${setup.todoColumnId}/tasks`)
+        .post(
+          `/api/projects/${setup.projectId}/boards/${setup.boardId}/columns/${setup.todoColumnId}/tasks`
+        )
         .set('Cookie', setup.adminCookies)
         .send({ title: 'My Story', type: 'STORY', priority: 'LOW' });
 
@@ -145,7 +159,9 @@ describe('Tasks Integration Tests', () => {
 
     it('should return 400 if title is missing', async () => {
       const res = await request(app)
-        .post(`/api/projects/${setup.projectId}/boards/${setup.boardId}/columns/${setup.todoColumnId}/tasks`)
+        .post(
+          `/api/projects/${setup.projectId}/boards/${setup.boardId}/columns/${setup.todoColumnId}/tasks`
+        )
         .set('Cookie', setup.adminCookies)
         .send({ type: 'TASK', priority: 'MEDIUM' });
 
@@ -154,7 +170,9 @@ describe('Tasks Integration Tests', () => {
 
     it('should return 400 if priority is invalid', async () => {
       const res = await request(app)
-        .post(`/api/projects/${setup.projectId}/boards/${setup.boardId}/columns/${setup.todoColumnId}/tasks`)
+        .post(
+          `/api/projects/${setup.projectId}/boards/${setup.boardId}/columns/${setup.todoColumnId}/tasks`
+        )
         .set('Cookie', setup.adminCookies)
         .send({ title: 'Bad Priority', type: 'TASK', priority: 'EXTREME' });
 
@@ -163,12 +181,16 @@ describe('Tasks Integration Tests', () => {
 
     it('should return 400 if STORY has a parentId', async () => {
       const storyRes = await request(app)
-        .post(`/api/projects/${setup.projectId}/boards/${setup.boardId}/columns/${setup.todoColumnId}/tasks`)
+        .post(
+          `/api/projects/${setup.projectId}/boards/${setup.boardId}/columns/${setup.todoColumnId}/tasks`
+        )
         .set('Cookie', setup.adminCookies)
         .send({ title: 'Parent Story', type: 'STORY', priority: 'MEDIUM' });
 
       const res = await request(app)
-        .post(`/api/projects/${setup.projectId}/boards/${setup.boardId}/columns/${setup.todoColumnId}/tasks`)
+        .post(
+          `/api/projects/${setup.projectId}/boards/${setup.boardId}/columns/${setup.todoColumnId}/tasks`
+        )
         .set('Cookie', setup.adminCookies)
         .send({
           title: 'Bad Story',
@@ -182,12 +204,16 @@ describe('Tasks Integration Tests', () => {
 
     it('should create a child task linked to a story', async () => {
       const storyRes = await request(app)
-        .post(`/api/projects/${setup.projectId}/boards/${setup.boardId}/columns/${setup.todoColumnId}/tasks`)
+        .post(
+          `/api/projects/${setup.projectId}/boards/${setup.boardId}/columns/${setup.todoColumnId}/tasks`
+        )
         .set('Cookie', setup.adminCookies)
         .send({ title: 'Parent Story', type: 'STORY', priority: 'MEDIUM' });
 
       const res = await request(app)
-        .post(`/api/projects/${setup.projectId}/boards/${setup.boardId}/columns/${setup.todoColumnId}/tasks`)
+        .post(
+          `/api/projects/${setup.projectId}/boards/${setup.boardId}/columns/${setup.todoColumnId}/tasks`
+        )
         .set('Cookie', setup.adminCookies)
         .send({
           title: 'Child Task',
@@ -203,17 +229,23 @@ describe('Tasks Integration Tests', () => {
     it('should enforce WIP limit on task creation', async () => {
       // Set WIP limit to 1
       await request(app)
-        .patch(`/api/projects/${setup.projectId}/boards/${setup.boardId}/columns/${setup.todoColumnId}`)
+        .patch(
+          `/api/projects/${setup.projectId}/boards/${setup.boardId}/columns/${setup.todoColumnId}`
+        )
         .set('Cookie', setup.adminCookies)
         .send({ wipLimit: 1 });
 
       await request(app)
-        .post(`/api/projects/${setup.projectId}/boards/${setup.boardId}/columns/${setup.todoColumnId}/tasks`)
+        .post(
+          `/api/projects/${setup.projectId}/boards/${setup.boardId}/columns/${setup.todoColumnId}/tasks`
+        )
         .set('Cookie', setup.adminCookies)
         .send({ title: 'Task 1', type: 'TASK', priority: 'MEDIUM' });
 
       const res = await request(app)
-        .post(`/api/projects/${setup.projectId}/boards/${setup.boardId}/columns/${setup.todoColumnId}/tasks`)
+        .post(
+          `/api/projects/${setup.projectId}/boards/${setup.boardId}/columns/${setup.todoColumnId}/tasks`
+        )
         .set('Cookie', setup.adminCookies)
         .send({ title: 'Task 2', type: 'TASK', priority: 'MEDIUM' });
 
@@ -222,7 +254,9 @@ describe('Tasks Integration Tests', () => {
 
     it('should assign a task to a member and send notification', async () => {
       const res = await request(app)
-        .post(`/api/projects/${setup.projectId}/boards/${setup.boardId}/columns/${setup.todoColumnId}/tasks`)
+        .post(
+          `/api/projects/${setup.projectId}/boards/${setup.boardId}/columns/${setup.todoColumnId}/tasks`
+        )
         .set('Cookie', setup.adminCookies)
         .send({
           title: 'Assigned Task',
@@ -239,21 +273,27 @@ describe('Tasks Integration Tests', () => {
         .get('/api/notifications')
         .set('Cookie', setup.memberCookies);
 
-      expect(notifRes.body.some((n: { message: string }) =>
-        n.message.includes('Assigned Task')
-      )).toBe(true);
+      expect(
+        notifRes.body.some((n: { message: string }) =>
+          n.message.includes('Assigned Task')
+        )
+      ).toBe(true);
     });
   });
 
   describe('GET /api/projects/:id/boards/:boardId/columns/:columnId/tasks', () => {
     it('should return all tasks in a column', async () => {
       await request(app)
-        .post(`/api/projects/${setup.projectId}/boards/${setup.boardId}/columns/${setup.todoColumnId}/tasks`)
+        .post(
+          `/api/projects/${setup.projectId}/boards/${setup.boardId}/columns/${setup.todoColumnId}/tasks`
+        )
         .set('Cookie', setup.adminCookies)
         .send({ title: 'Task A', type: 'TASK', priority: 'MEDIUM' });
 
       const res = await request(app)
-        .get(`/api/projects/${setup.projectId}/boards/${setup.boardId}/columns/${setup.todoColumnId}/tasks`)
+        .get(
+          `/api/projects/${setup.projectId}/boards/${setup.boardId}/columns/${setup.todoColumnId}/tasks`
+        )
         .set('Cookie', setup.adminCookies);
 
       expect(res.status).toBe(200);
@@ -265,12 +305,16 @@ describe('Tasks Integration Tests', () => {
   describe('GET /api/projects/:id/boards/:boardId/columns/:columnId/tasks/:taskId', () => {
     it('should return a single task', async () => {
       const taskRes = await request(app)
-        .post(`/api/projects/${setup.projectId}/boards/${setup.boardId}/columns/${setup.todoColumnId}/tasks`)
+        .post(
+          `/api/projects/${setup.projectId}/boards/${setup.boardId}/columns/${setup.todoColumnId}/tasks`
+        )
         .set('Cookie', setup.adminCookies)
         .send({ title: 'Get Me', type: 'TASK', priority: 'MEDIUM' });
 
       const res = await request(app)
-        .get(`/api/projects/${setup.projectId}/boards/${setup.boardId}/columns/${setup.todoColumnId}/tasks/${taskRes.body.id}`)
+        .get(
+          `/api/projects/${setup.projectId}/boards/${setup.boardId}/columns/${setup.todoColumnId}/tasks/${taskRes.body.id}`
+        )
         .set('Cookie', setup.adminCookies);
 
       expect(res.status).toBe(200);
@@ -279,7 +323,9 @@ describe('Tasks Integration Tests', () => {
 
     it('should return 404 for non-existent task', async () => {
       const res = await request(app)
-        .get(`/api/projects/${setup.projectId}/boards/${setup.boardId}/columns/${setup.todoColumnId}/tasks/fakeid`)
+        .get(
+          `/api/projects/${setup.projectId}/boards/${setup.boardId}/columns/${setup.todoColumnId}/tasks/fakeid`
+        )
         .set('Cookie', setup.adminCookies);
 
       expect(res.status).toBe(404);
@@ -291,7 +337,9 @@ describe('Tasks Integration Tests', () => {
 
     beforeEach(async () => {
       const taskRes = await request(app)
-        .post(`/api/projects/${setup.projectId}/boards/${setup.boardId}/columns/${setup.todoColumnId}/tasks`)
+        .post(
+          `/api/projects/${setup.projectId}/boards/${setup.boardId}/columns/${setup.todoColumnId}/tasks`
+        )
         .set('Cookie', setup.adminCookies)
         .send({ title: 'Update Me', type: 'TASK', priority: 'MEDIUM' });
 
@@ -300,7 +348,9 @@ describe('Tasks Integration Tests', () => {
 
     it('should update task title', async () => {
       const res = await request(app)
-        .patch(`/api/projects/${setup.projectId}/boards/${setup.boardId}/columns/${setup.todoColumnId}/tasks/${taskId}`)
+        .patch(
+          `/api/projects/${setup.projectId}/boards/${setup.boardId}/columns/${setup.todoColumnId}/tasks/${taskId}`
+        )
         .set('Cookie', setup.adminCookies)
         .send({ title: 'Updated Title' });
 
@@ -310,7 +360,9 @@ describe('Tasks Integration Tests', () => {
 
     it('should move task to next column by updating status', async () => {
       const res = await request(app)
-        .patch(`/api/projects/${setup.projectId}/boards/${setup.boardId}/columns/${setup.todoColumnId}/tasks/${taskId}`)
+        .patch(
+          `/api/projects/${setup.projectId}/boards/${setup.boardId}/columns/${setup.todoColumnId}/tasks/${taskId}`
+        )
         .set('Cookie', setup.adminCookies)
         .send({ status: 'IN_PROGRESS' });
 
@@ -321,7 +373,9 @@ describe('Tasks Integration Tests', () => {
 
     it('should return 400 for invalid status transition (skipping columns)', async () => {
       const res = await request(app)
-        .patch(`/api/projects/${setup.projectId}/boards/${setup.boardId}/columns/${setup.todoColumnId}/tasks/${taskId}`)
+        .patch(
+          `/api/projects/${setup.projectId}/boards/${setup.boardId}/columns/${setup.todoColumnId}/tasks/${taskId}`
+        )
         .set('Cookie', setup.adminCookies)
         .send({ status: 'DONE' });
 
@@ -331,7 +385,9 @@ describe('Tasks Integration Tests', () => {
 
     it('should allow moving directly to CLOSED from any column', async () => {
       const res = await request(app)
-        .patch(`/api/projects/${setup.projectId}/boards/${setup.boardId}/columns/${setup.todoColumnId}/tasks/${taskId}`)
+        .patch(
+          `/api/projects/${setup.projectId}/boards/${setup.boardId}/columns/${setup.todoColumnId}/tasks/${taskId}`
+        )
         .set('Cookie', setup.adminCookies)
         .send({ status: 'CLOSED' });
 
@@ -342,24 +398,32 @@ describe('Tasks Integration Tests', () => {
     it('should enforce WIP limit when moving tasks', async () => {
       // Set WIP limit of 1 on IN_PROGRESS
       await request(app)
-        .patch(`/api/projects/${setup.projectId}/boards/${setup.boardId}/columns/${setup.inProgressColumnId}`)
+        .patch(
+          `/api/projects/${setup.projectId}/boards/${setup.boardId}/columns/${setup.inProgressColumnId}`
+        )
         .set('Cookie', setup.adminCookies)
         .send({ wipLimit: 1 });
 
       // Fill IN_PROGRESS
       const task1Res = await request(app)
-        .post(`/api/projects/${setup.projectId}/boards/${setup.boardId}/columns/${setup.todoColumnId}/tasks`)
+        .post(
+          `/api/projects/${setup.projectId}/boards/${setup.boardId}/columns/${setup.todoColumnId}/tasks`
+        )
         .set('Cookie', setup.adminCookies)
         .send({ title: 'Filler Task', type: 'TASK', priority: 'MEDIUM' });
 
       await request(app)
-        .patch(`/api/projects/${setup.projectId}/boards/${setup.boardId}/columns/${setup.todoColumnId}/tasks/${task1Res.body.id}`)
+        .patch(
+          `/api/projects/${setup.projectId}/boards/${setup.boardId}/columns/${setup.todoColumnId}/tasks/${task1Res.body.id}`
+        )
         .set('Cookie', setup.adminCookies)
         .send({ status: 'IN_PROGRESS' });
 
       // Try to move another task to IN_PROGRESS — should fail
       const res = await request(app)
-        .patch(`/api/projects/${setup.projectId}/boards/${setup.boardId}/columns/${setup.todoColumnId}/tasks/${taskId}`)
+        .patch(
+          `/api/projects/${setup.projectId}/boards/${setup.boardId}/columns/${setup.todoColumnId}/tasks/${taskId}`
+        )
         .set('Cookie', setup.adminCookies)
         .send({ status: 'IN_PROGRESS' });
 
@@ -369,7 +433,9 @@ describe('Tasks Integration Tests', () => {
 
     it('should update assignee and create audit log', async () => {
       const res = await request(app)
-        .patch(`/api/projects/${setup.projectId}/boards/${setup.boardId}/columns/${setup.todoColumnId}/tasks/${taskId}`)
+        .patch(
+          `/api/projects/${setup.projectId}/boards/${setup.boardId}/columns/${setup.todoColumnId}/tasks/${taskId}`
+        )
         .set('Cookie', setup.adminCookies)
         .send({ assigneeId: setup.memberUserId });
 
@@ -378,7 +444,9 @@ describe('Tasks Integration Tests', () => {
 
       // Verify audit log was created
       const activityRes = await request(app)
-        .get(`/api/projects/${setup.projectId}/boards/${setup.boardId}/columns/${setup.todoColumnId}/tasks/${taskId}/activity`)
+        .get(
+          `/api/projects/${setup.projectId}/boards/${setup.boardId}/columns/${setup.todoColumnId}/tasks/${taskId}/activity`
+        )
         .set('Cookie', setup.adminCookies);
 
       const auditEntry = activityRes.body.find(
@@ -391,13 +459,17 @@ describe('Tasks Integration Tests', () => {
     it('should clear assignee when set to null', async () => {
       // First assign
       await request(app)
-        .patch(`/api/projects/${setup.projectId}/boards/${setup.boardId}/columns/${setup.todoColumnId}/tasks/${taskId}`)
+        .patch(
+          `/api/projects/${setup.projectId}/boards/${setup.boardId}/columns/${setup.todoColumnId}/tasks/${taskId}`
+        )
         .set('Cookie', setup.adminCookies)
         .send({ assigneeId: setup.memberUserId });
 
       // Then clear
       const res = await request(app)
-        .patch(`/api/projects/${setup.projectId}/boards/${setup.boardId}/columns/${setup.todoColumnId}/tasks/${taskId}`)
+        .patch(
+          `/api/projects/${setup.projectId}/boards/${setup.boardId}/columns/${setup.todoColumnId}/tasks/${taskId}`
+        )
         .set('Cookie', setup.adminCookies)
         .send({ assigneeId: null });
 
@@ -409,18 +481,24 @@ describe('Tasks Integration Tests', () => {
   describe('DELETE /api/projects/:id/boards/:boardId/columns/:columnId/tasks/:taskId', () => {
     it('should delete a task and return 200', async () => {
       const taskRes = await request(app)
-        .post(`/api/projects/${setup.projectId}/boards/${setup.boardId}/columns/${setup.todoColumnId}/tasks`)
+        .post(
+          `/api/projects/${setup.projectId}/boards/${setup.boardId}/columns/${setup.todoColumnId}/tasks`
+        )
         .set('Cookie', setup.adminCookies)
         .send({ title: 'Delete Me', type: 'TASK', priority: 'MEDIUM' });
 
       const res = await request(app)
-        .delete(`/api/projects/${setup.projectId}/boards/${setup.boardId}/columns/${setup.todoColumnId}/tasks/${taskRes.body.id}`)
+        .delete(
+          `/api/projects/${setup.projectId}/boards/${setup.boardId}/columns/${setup.todoColumnId}/tasks/${taskRes.body.id}`
+        )
         .set('Cookie', setup.adminCookies);
 
       expect(res.status).toBe(200);
 
       const getRes = await request(app)
-        .get(`/api/projects/${setup.projectId}/boards/${setup.boardId}/columns/${setup.todoColumnId}/tasks/${taskRes.body.id}`)
+        .get(
+          `/api/projects/${setup.projectId}/boards/${setup.boardId}/columns/${setup.todoColumnId}/tasks/${taskRes.body.id}`
+        )
         .set('Cookie', setup.adminCookies);
 
       expect(getRes.status).toBe(404);
@@ -439,12 +517,16 @@ describe('Tasks Integration Tests', () => {
         .send({ username: 'viewer_task', role: 'VIEWER' });
 
       const taskRes = await request(app)
-        .post(`/api/projects/${setup.projectId}/boards/${setup.boardId}/columns/${setup.todoColumnId}/tasks`)
+        .post(
+          `/api/projects/${setup.projectId}/boards/${setup.boardId}/columns/${setup.todoColumnId}/tasks`
+        )
         .set('Cookie', setup.adminCookies)
         .send({ title: 'Protected Task', type: 'TASK', priority: 'MEDIUM' });
 
       const res = await request(app)
-        .delete(`/api/projects/${setup.projectId}/boards/${setup.boardId}/columns/${setup.todoColumnId}/tasks/${taskRes.body.id}`)
+        .delete(
+          `/api/projects/${setup.projectId}/boards/${setup.boardId}/columns/${setup.todoColumnId}/tasks/${taskRes.body.id}`
+        )
         .set('Cookie', viewer.cookies);
 
       expect(res.status).toBe(403);
@@ -454,14 +536,18 @@ describe('Tasks Integration Tests', () => {
   describe('Story status derivation', () => {
     it('should derive story status when child task moves', async () => {
       const storyRes = await request(app)
-        .post(`/api/projects/${setup.projectId}/boards/${setup.boardId}/columns/${setup.todoColumnId}/tasks`)
+        .post(
+          `/api/projects/${setup.projectId}/boards/${setup.boardId}/columns/${setup.todoColumnId}/tasks`
+        )
         .set('Cookie', setup.adminCookies)
         .send({ title: 'Parent Story', type: 'STORY', priority: 'MEDIUM' });
 
       const storyId = storyRes.body.id;
 
       const childRes = await request(app)
-        .post(`/api/projects/${setup.projectId}/boards/${setup.boardId}/columns/${setup.todoColumnId}/tasks`)
+        .post(
+          `/api/projects/${setup.projectId}/boards/${setup.boardId}/columns/${setup.todoColumnId}/tasks`
+        )
         .set('Cookie', setup.adminCookies)
         .send({
           title: 'Child Task',
@@ -472,13 +558,17 @@ describe('Tasks Integration Tests', () => {
 
       // Move child to IN_PROGRESS
       await request(app)
-        .patch(`/api/projects/${setup.projectId}/boards/${setup.boardId}/columns/${setup.todoColumnId}/tasks/${childRes.body.id}`)
+        .patch(
+          `/api/projects/${setup.projectId}/boards/${setup.boardId}/columns/${setup.todoColumnId}/tasks/${childRes.body.id}`
+        )
         .set('Cookie', setup.adminCookies)
         .send({ status: 'IN_PROGRESS' });
 
       // Story status should now be IN_PROGRESS
       const storyGetRes = await request(app)
-        .get(`/api/projects/${setup.projectId}/boards/${setup.boardId}/columns/${setup.inProgressColumnId}/tasks/${storyId}`)
+        .get(
+          `/api/projects/${setup.projectId}/boards/${setup.boardId}/columns/${setup.inProgressColumnId}/tasks/${storyId}`
+        )
         .set('Cookie', setup.adminCookies);
 
       expect(storyGetRes.status).toBe(200);
@@ -489,7 +579,9 @@ describe('Tasks Integration Tests', () => {
   describe('GET .../tasks/:taskId/activity', () => {
     it('should return combined comments and audit logs', async () => {
       const taskRes = await request(app)
-        .post(`/api/projects/${setup.projectId}/boards/${setup.boardId}/columns/${setup.todoColumnId}/tasks`)
+        .post(
+          `/api/projects/${setup.projectId}/boards/${setup.boardId}/columns/${setup.todoColumnId}/tasks`
+        )
         .set('Cookie', setup.adminCookies)
         .send({ title: 'Activity Task', type: 'TASK', priority: 'MEDIUM' });
 
@@ -503,17 +595,25 @@ describe('Tasks Integration Tests', () => {
 
       // Move task to generate audit log
       await request(app)
-        .patch(`/api/projects/${setup.projectId}/boards/${setup.boardId}/columns/${setup.todoColumnId}/tasks/${taskId}`)
+        .patch(
+          `/api/projects/${setup.projectId}/boards/${setup.boardId}/columns/${setup.todoColumnId}/tasks/${taskId}`
+        )
         .set('Cookie', setup.adminCookies)
         .send({ status: 'IN_PROGRESS' });
 
       const res = await request(app)
-        .get(`/api/projects/${setup.projectId}/boards/${setup.boardId}/columns/${setup.inProgressColumnId}/tasks/${taskId}/activity`)
+        .get(
+          `/api/projects/${setup.projectId}/boards/${setup.boardId}/columns/${setup.inProgressColumnId}/tasks/${taskId}/activity`
+        )
         .set('Cookie', setup.adminCookies);
 
       expect(res.status).toBe(200);
-      expect(res.body.some((a: { type: string }) => a.type === 'COMMENT')).toBe(true);
-      expect(res.body.some((a: { type: string }) => a.type === 'AUDIT')).toBe(true);
+      expect(res.body.some((a: { type: string }) => a.type === 'COMMENT')).toBe(
+        true
+      );
+      expect(res.body.some((a: { type: string }) => a.type === 'AUDIT')).toBe(
+        true
+      );
     });
   });
 });
@@ -528,7 +628,9 @@ describe('Comments Integration Tests', () => {
     setup = await setupBoard('comments');
 
     const taskRes = await request(app)
-      .post(`/api/projects/${setup.projectId}/boards/${setup.boardId}/columns/${setup.todoColumnId}/tasks`)
+      .post(
+        `/api/projects/${setup.projectId}/boards/${setup.boardId}/columns/${setup.todoColumnId}/tasks`
+      )
       .set('Cookie', setup.adminCookies)
       .send({ title: 'Comment Task', type: 'TASK', priority: 'MEDIUM' });
 
@@ -568,7 +670,9 @@ describe('Comments Integration Tests', () => {
     it('should notify assignee when comment is added', async () => {
       // Assign task to member
       await request(app)
-        .patch(`/api/projects/${setup.projectId}/boards/${setup.boardId}/columns/${setup.todoColumnId}/tasks/${taskId}`)
+        .patch(
+          `/api/projects/${setup.projectId}/boards/${setup.boardId}/columns/${setup.todoColumnId}/tasks/${taskId}`
+        )
         .set('Cookie', setup.adminCookies)
         .send({ assigneeId: setup.memberUserId });
 
@@ -581,9 +685,11 @@ describe('Comments Integration Tests', () => {
         .get('/api/notifications')
         .set('Cookie', setup.memberCookies);
 
-      expect(notifRes.body.some((n: { message: string }) =>
-        n.message.toLowerCase().includes('comment')
-      )).toBe(true);
+      expect(
+        notifRes.body.some((n: { message: string }) =>
+          n.message.toLowerCase().includes('comment')
+        )
+      ).toBe(true);
     });
 
     it('should notify mentioned user in comment', async () => {
@@ -598,9 +704,11 @@ describe('Comments Integration Tests', () => {
         .get('/api/notifications')
         .set('Cookie', setup.memberCookies);
 
-      expect(notifRes.body.some((n: { message: string }) =>
-        n.message.toLowerCase().includes('mention')
-      )).toBe(true);
+      expect(
+        notifRes.body.some((n: { message: string }) =>
+          n.message.toLowerCase().includes('mention')
+        )
+      ).toBe(true);
     });
   });
 
@@ -633,7 +741,9 @@ describe('Comments Integration Tests', () => {
         .send({ content: 'Original' });
 
       const res = await request(app)
-        .patch(`/api/projects/${setup.projectId}/tasks/${taskId}/comments/${commentRes.body.id}`)
+        .patch(
+          `/api/projects/${setup.projectId}/tasks/${taskId}/comments/${commentRes.body.id}`
+        )
         .set('Cookie', setup.adminCookies)
         .send({ content: 'Updated' });
 
@@ -648,7 +758,9 @@ describe('Comments Integration Tests', () => {
         .send({ content: 'Admin comment' });
 
       const res = await request(app)
-        .patch(`/api/projects/${setup.projectId}/tasks/${taskId}/comments/${commentRes.body.id}`)
+        .patch(
+          `/api/projects/${setup.projectId}/tasks/${taskId}/comments/${commentRes.body.id}`
+        )
         .set('Cookie', setup.memberCookies)
         .send({ content: 'Stolen edit' });
 
@@ -662,7 +774,9 @@ describe('Comments Integration Tests', () => {
         .send({ content: 'To be emptied' });
 
       const res = await request(app)
-        .patch(`/api/projects/${setup.projectId}/tasks/${taskId}/comments/${commentRes.body.id}`)
+        .patch(
+          `/api/projects/${setup.projectId}/tasks/${taskId}/comments/${commentRes.body.id}`
+        )
         .set('Cookie', setup.adminCookies)
         .send({ content: '' });
 
@@ -678,7 +792,9 @@ describe('Comments Integration Tests', () => {
         .send({ content: 'Delete me' });
 
       const res = await request(app)
-        .delete(`/api/projects/${setup.projectId}/tasks/${taskId}/comments/${commentRes.body.id}`)
+        .delete(
+          `/api/projects/${setup.projectId}/tasks/${taskId}/comments/${commentRes.body.id}`
+        )
         .set('Cookie', setup.adminCookies);
 
       expect(res.status).toBe(200);
@@ -691,7 +807,9 @@ describe('Comments Integration Tests', () => {
         .send({ content: 'Admin only' });
 
       const res = await request(app)
-        .delete(`/api/projects/${setup.projectId}/tasks/${taskId}/comments/${commentRes.body.id}`)
+        .delete(
+          `/api/projects/${setup.projectId}/tasks/${taskId}/comments/${commentRes.body.id}`
+        )
         .set('Cookie', setup.memberCookies);
 
       expect(res.status).toBe(403);
@@ -712,7 +830,9 @@ describe('Notifications Integration Tests', () => {
     it('should return all notifications for the current user', async () => {
       // Create a task assigned to member to trigger a notification
       await request(app)
-        .post(`/api/projects/${setup.projectId}/boards/${setup.boardId}/columns/${setup.todoColumnId}/tasks`)
+        .post(
+          `/api/projects/${setup.projectId}/boards/${setup.boardId}/columns/${setup.todoColumnId}/tasks`
+        )
         .set('Cookie', setup.adminCookies)
         .send({
           title: 'Notif Task',
@@ -739,7 +859,9 @@ describe('Notifications Integration Tests', () => {
   describe('PATCH /api/notifications/:notificationId', () => {
     it('should mark notification as read', async () => {
       await request(app)
-        .post(`/api/projects/${setup.projectId}/boards/${setup.boardId}/columns/${setup.todoColumnId}/tasks`)
+        .post(
+          `/api/projects/${setup.projectId}/boards/${setup.boardId}/columns/${setup.todoColumnId}/tasks`
+        )
         .set('Cookie', setup.adminCookies)
         .send({
           title: 'Read Me',
@@ -765,7 +887,9 @@ describe('Notifications Integration Tests', () => {
 
     it('should mark notification as unread', async () => {
       await request(app)
-        .post(`/api/projects/${setup.projectId}/boards/${setup.boardId}/columns/${setup.todoColumnId}/tasks`)
+        .post(
+          `/api/projects/${setup.projectId}/boards/${setup.boardId}/columns/${setup.todoColumnId}/tasks`
+        )
         .set('Cookie', setup.adminCookies)
         .send({
           title: 'Unread Me',
@@ -796,7 +920,9 @@ describe('Notifications Integration Tests', () => {
 
     it('should return 403 if trying to update someone else notification', async () => {
       await request(app)
-        .post(`/api/projects/${setup.projectId}/boards/${setup.boardId}/columns/${setup.todoColumnId}/tasks`)
+        .post(
+          `/api/projects/${setup.projectId}/boards/${setup.boardId}/columns/${setup.todoColumnId}/tasks`
+        )
         .set('Cookie', setup.adminCookies)
         .send({
           title: 'Steal Notif',
@@ -821,7 +947,9 @@ describe('Notifications Integration Tests', () => {
 
     it('should return 400 if bool is not a boolean', async () => {
       await request(app)
-        .post(`/api/projects/${setup.projectId}/boards/${setup.boardId}/columns/${setup.todoColumnId}/tasks`)
+        .post(
+          `/api/projects/${setup.projectId}/boards/${setup.boardId}/columns/${setup.todoColumnId}/tasks`
+        )
         .set('Cookie', setup.adminCookies)
         .send({
           title: 'Bool Task',

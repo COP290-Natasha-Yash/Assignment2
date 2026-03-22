@@ -48,13 +48,13 @@ router.post('/logout', authenticate, async (req: Request, res: Response) => {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'lax',
-      path: '/' // DEFAULT PATH
+      path: '/', // DEFAULT PATH
     });
     res.clearCookie('refreshToken', {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'lax',
-      path: '/'
+      path: '/',
     });
 
     res.status(200).json({ message: 'Logged Out Successfully' });

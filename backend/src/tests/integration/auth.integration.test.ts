@@ -108,7 +108,9 @@ describe('Auth Integration Tests', () => {
       expect(res.status).toBe(201);
       const cookies = res.headers['set-cookie'] as unknown as string[];
       expect(cookies.some((c: string) => c.startsWith('token='))).toBe(true);
-      expect(cookies.some((c: string) => c.startsWith('refreshToken='))).toBe(true);
+      expect(cookies.some((c: string) => c.startsWith('refreshToken='))).toBe(
+        true
+      );
     });
   });
 

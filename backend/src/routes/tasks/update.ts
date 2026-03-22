@@ -262,7 +262,7 @@ router.patch(
 
         // Checking WIP limit on the new column
         const taskCount = await prisma.task.count({
-          where: { columnId: newColumn.id , type: {not: 'STORY'}},
+          where: { columnId: newColumn.id, type: { not: 'STORY' } },
         });
         if (
           newColumn.wipLimit &&
@@ -352,32 +352,38 @@ router.patch(
 
       // Logging and notifying if the assignee changed
       // Logging and notifying if the assignee changed
-if (task.assigneeId !== updatedTask.assigneeId) {
-  const [oldAssignee, newAssignee] = await Promise.all([
-    task.assigneeId
-      ? prisma.user.findUnique({ where: { id: task.assigneeId }, select: { username: true } })
-      : null,
-    updatedTask.assigneeId
-      ? prisma.user.findUnique({ where: { id: updatedTask.assigneeId }, select: { username: true } })
-      : null,
-  ]);
+      if (task.assigneeId !== updatedTask.assigneeId) {
+        const [oldAssignee, newAssignee] = await Promise.all([
+          task.assigneeId
+            ? prisma.user.findUnique({
+                where: { id: task.assigneeId },
+                select: { username: true },
+              })
+            : null,
+          updatedTask.assigneeId
+            ? prisma.user.findUnique({
+                where: { id: updatedTask.assigneeId },
+                select: { username: true },
+              })
+            : null,
+        ]);
 
-  await auditLog(
-    taskId,
-    req.userId!,
-    'ASSIGNEE_CHANGED',
-    oldAssignee?.username ?? 'none',
-    newAssignee?.username ?? 'none'
-  );
+        await auditLog(
+          taskId,
+          req.userId!,
+          'ASSIGNEE_CHANGED',
+          oldAssignee?.username ?? 'none',
+          newAssignee?.username ?? 'none'
+        );
 
-  if (updatedTask.assigneeId) {
-    await createNotification(
-      updatedTask.assigneeId,
-      'You Have Been Assigned a Task',
-      task
-    );
-  }
-}
+        if (updatedTask.assigneeId) {
+          await createNotification(
+            updatedTask.assigneeId,
+            'You Have Been Assigned a Task',
+            task
+          );
+        }
+      }
 
       // If the task has a parent story, updating the story's status based on its subtasks
       if (updatedTask.parentId) {
@@ -391,17 +397,17 @@ if (task.assigneeId !== updatedTask.assigneeId) {
           });
           const oldStoryStatus = storyTask!.status;
 
-         const newStoryCol = await prisma.column.findFirst({
-  where: { boardId, name: expectedStatus },
-});
+          const newStoryCol = await prisma.column.findFirst({
+            where: { boardId, name: expectedStatus },
+          });
 
-await prisma.task.update({
-  where: { id: updatedTask.parentId },
-  data: {
-    status: expectedStatus,
-    ...(newStoryCol && { columnId: newStoryCol.id }),
-  },
-});
+          await prisma.task.update({
+            where: { id: updatedTask.parentId },
+            data: {
+              status: expectedStatus,
+              ...(newStoryCol && { columnId: newStoryCol.id }),
+            },
+          });
 
           // Logging the story status change if it actually changed
           if (oldStoryStatus !== expectedStatus) {
@@ -426,16 +432,16 @@ await prisma.task.update({
           const oldStoryStatus = storyTask!.status;
 
           const oldStoryCol = await prisma.column.findFirst({
-  where: { boardId, name: oldExpected },
-});
+            where: { boardId, name: oldExpected },
+          });
 
-await prisma.task.update({
-  where: { id: task.parentId },
-  data: {
-    status: oldExpected,
-    ...(oldStoryCol && { columnId: oldStoryCol.id }),
-  },
-});
+          await prisma.task.update({
+            where: { id: task.parentId },
+            data: {
+              status: oldExpected,
+              ...(oldStoryCol && { columnId: oldStoryCol.id }),
+            },
+          });
 
           // Logging the old story status change if it actually changed
           if (oldStoryStatus !== oldExpected) {

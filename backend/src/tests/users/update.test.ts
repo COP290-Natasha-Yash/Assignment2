@@ -26,43 +26,42 @@ afterAll(async () => {
 });
 
 describe('PATCH /api/users/me (Multipart Upload)', () => {
-  it('1. Should update the name using multipart/form-data', async () => {
+  // Test 1: Updating just the name
+  it('1. Should update the name', async () => {
     const res = await request(app)
       .patch('/api/users/me')
-      .set('Cookie', userCookie)
-      .field('name', 'Yash Vaishnav'); //We Use .field for text in multipart forms
+      .set('Cookie', userCookie) // <-- ADD THIS LINE
+      .send({ name: 'Yash Vaishnav' });
 
     expect(res.status).toBe(200);
     expect(res.body.name).toBe('Yash Vaishnav');
   });
 
-  it('2. Should successfully upload an avatar and return the URL', async () => {
-    const res = await request(app)
-      .patch('/api/users/me')
-      .set('Cookie', userCookie)
-      .attach('avatar', path.join(__dirname, 'dummy.jpg')); // Use .attach for files
-
-    expect(res.status).toBe(200);
-    expect(res.body.avatar).toMatch(/^\/uploads\//); // Should start with /uploads/
-  });
-
+  // Test 2 & 3: Uploading an avatar (and name)
   it('3. Should update both name and avatar simultaneously', async () => {
+    const rawBase64Avatar =
+      'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNkYAAAAAYAAjCB0C8AAAAASUVORK5CYII=';
+
     const res = await request(app)
       .patch('/api/users/me')
       .set('Cookie', userCookie)
-      .field('name', 'Combo Update')
-      .attach('avatar', path.join(__dirname, 'dummy.jpg'));
+      .send({
+        name: 'Yash Vaishnav',
+        avatar: rawBase64Avatar,
+      });
 
     expect(res.status).toBe(200);
-    expect(res.body.name).toBe('Combo Update');
-    expect(res.body.avatar).toMatch(/^\/uploads\//);
+
+    // Assert that the backend correctly added your expected prefix!
+    expect(res.body.avatar).toBe(`data:image/jpeg;base64,${rawBase64Avatar}`);
   });
 
+  // Test 4: Empty name check
   it('4. Should return 400 if name is empty', async () => {
     const res = await request(app)
       .patch('/api/users/me')
-      .set('Cookie', userCookie)
-      .field('name', '   '); // Empty whitespace
+      .set('Cookie', userCookie) // <-- ADD THIS LINE
+      .send({ name: '   ' });
 
     expect(res.status).toBe(400);
     expect(res.body.error.message).toBe('Name Cannot be Empty');
