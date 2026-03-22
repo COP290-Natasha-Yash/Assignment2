@@ -5,6 +5,10 @@ import { prisma } from '../../prisma';
 // Importing role-based middleware to restrict this route to project admins and members only
 import { requireProjectRole } from '../../middleware/roles';
 
+// Importing utility to determine the expected status of a story based on its subtasks
+// Needed so deleting a child task re-derives the parent story's status, same as update/move
+import { getExpectedStoryStatus } from '../../utils/getExpectedStoryStatus';
+
 const router = express.Router();
 
 // Handles DELETE /:id/boards/:boardId/columns/:columnId/tasks/:taskId — deletes a task
@@ -81,9 +85,37 @@ router.delete(
         return;
       }
 
+      // Saving parentId BEFORE deletion — once the task is gone we can no longer read it,
+      // but we still need it to re-derive the parent story's status from remaining siblings
+      const parentId = task.parentId;
+
       // Deleting the task from the DB
       await prisma.task.delete({ where: { id: taskId } });
 
+      // Now that the child is deleted, getExpectedStoryStatus will compute the
+      // correct status from the remaining siblings — same pattern as update.ts/move.ts
+      if (parentId) {
+        const expectedStatus = await getExpectedStoryStatus(parentId);
+
+        if (expectedStatus) {
+          const storyTask = await prisma.task.findUnique({
+            where: { id: parentId },
+          });
+
+          // Also update the story's columnId so it physically moves on the board
+          const newStoryCol = await prisma.column.findFirst({
+            where: { boardId, name: expectedStatus },
+          });
+
+          await prisma.task.update({
+            where: { id: parentId },
+            data: {
+              status: expectedStatus,
+              ...(newStoryCol && { columnId: newStoryCol.id }),
+            },
+          });
+        }
+      }
       res.status(200).json({ message: 'Task Deleted Successfully' });
     } catch (error) {
       // Something unexpected went wrong — log it and return a generic 500

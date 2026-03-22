@@ -73,7 +73,7 @@ router.post(
       const existingColumns = await prisma.column.count({ where: { boardId } });
 
       // Placing the new column at the end of the current columns
-      const order = existingColumns + 1;
+      const order = existingColumns ; //BECAUSE CLOSED COLUMN HAS ORDER 99
 
       // Creating the new column on the board
       const column = await prisma.column.create({

@@ -8,6 +8,10 @@ import { requireProjectRole } from '../../middleware/roles';
 // Importing utility function to create notifications for users
 import { createNotification } from '../../utils/createNotification';
 
+// Importing utility to determine the expected status of a story based on its subtasks
+// Needed so creating a child task re-derives the parent story's status, same as update/move
+import { getExpectedStoryStatus } from '../../utils/getExpectedStoryStatus';
+
 const router = express.Router();
 
 // Handles POST /:id/boards/:boardId/columns/:columnId/tasks — creates a new task in a column
@@ -257,6 +261,34 @@ router.post(
           `You Have Been Assigned a Task: ${task.title}`,
           task
         );
+      }
+
+
+      // If this new task belongs to a parent story, recalculate the story's
+      // status based on all its children — same pattern as update.ts and move.ts.
+      // Without this, creating a child task would leave the story status stale.
+      if (task.parentId) {
+        const expectedStatus = await getExpectedStoryStatus(task.parentId);
+
+        if (expectedStatus) {
+          const storyTask = await prisma.task.findUnique({
+            where: { id: task.parentId },
+          });
+          const oldStoryStatus = storyTask!.status;
+
+          // Also update the story's columnId so it physically moves on the board
+          const newStoryCol = await prisma.column.findFirst({
+            where: { boardId, name: expectedStatus },
+          });
+
+          await prisma.task.update({
+            where: { id: task.parentId },
+            data: {
+              status: expectedStatus,
+              ...(newStoryCol && { columnId: newStoryCol.id }),
+            },
+          });
+        }
       }
 
       res.status(201).json(task);
