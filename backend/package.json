@@ -6,6 +6,7 @@
   "scripts": {
     "dev": "nodemon --exec ts-node src/server.ts",
     "test": "jest --runInBand",
+    "test:integration": "jest --config jest.integration.config.ts",
     "lint": "eslint src/**/*.ts",
     "seed": "ts-node prisma/seed.ts",
     "format": "prettier --write src/**/*.ts"
