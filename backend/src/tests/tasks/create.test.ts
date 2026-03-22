@@ -104,7 +104,7 @@ describe('POST /api/projects/:id/boards/:boardId/columns/:columnId/tasks', () =>
       .send({ title: 'Task', reporterId: adminId, priority: 'ULTRA_HIGH' });
 
     expect(res.status).toBe(400);
-    expect(res.body.error.message).toBe('Invalid priority');
+    expect(res.body.error.message).toBe('Invalid Priority');
   });
 
   it('4. Should successfully link a SUBTASK to a STORY on the same board', async () => {

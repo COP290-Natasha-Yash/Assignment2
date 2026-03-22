@@ -64,7 +64,7 @@ router.post(
       }
 
       // Checking if the column has reached its WIP limit before allowing a new task
-      const taskCount = await prisma.task.count({ where: { columnId } });
+      const taskCount = await prisma.task.count({ where: { columnId, type: {not : 'STORY'} } });
       if (column.wipLimit && taskCount >= column.wipLimit) {
         res.status(400).json({
           error: {
@@ -252,7 +252,7 @@ router.post(
       if (task.assigneeId) {
         await createNotification(
           task.assigneeId,
-          'You Have Been Assigned a Task',
+          `You Have Been Assigned a Task: ${task.title}`,
           task
         );
       }

@@ -80,7 +80,7 @@ describe('PATCH /api/projects/:id/boards/:boardId/columns/:columnId/tasks/:taskI
       where: { taskId: task.id, action: 'ASSIGNEE_CHANGED' },
     });
     expect(log).toBeDefined();
-    expect(log?.newValue).toBe(adminId);
+    expect(log?.newValue).toBe('admin');
 
     // Check Notification
     const notification = await prisma.notification.findFirst({

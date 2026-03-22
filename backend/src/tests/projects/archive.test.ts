@@ -63,11 +63,11 @@ afterAll(async () => {
 });
 
 describe('PATCH /api/projects/:id/archive', () => {
-  it('1. Should successfully archive a project (bool: true)', async () => {
+  it('1. Should successfully archive a project (archived: true)', async () => {
     const res = await request(app)
       .patch(`/api/projects/${projectId}/archive`)
       .set('Cookie', adminCookie)
-      .send({ bool: true });
+      .send({ archived: true });
 
     expect(res.status).toBe(200);
     expect(res.body.archived).toBe(true);
@@ -79,7 +79,7 @@ describe('PATCH /api/projects/:id/archive', () => {
     expect(dbCheck?.archived).toBe(true);
   });
 
-  it('2. Should successfully unarchive a project (bool: false)', async () => {
+  it('2. Should successfully unarchive a project (archived: false)', async () => {
     // Manually archive it first
     await prisma.project.update({
       where: { id: projectId },
@@ -89,7 +89,7 @@ describe('PATCH /api/projects/:id/archive', () => {
     const res = await request(app)
       .patch(`/api/projects/${projectId}/archive`)
       .set('Cookie', adminCookie)
-      .send({ bool: false });
+      .send({ archived: false });
 
     expect(res.status).toBe(200);
     expect(res.body.archived).toBe(false);
@@ -104,7 +104,7 @@ describe('PATCH /api/projects/:id/archive', () => {
     const res = await request(app)
       .patch(`/api/projects/${projectId}/archive`)
       .set('Cookie', adminCookie)
-      .send({ bool: true });
+      .send({ archived: true });
 
     expect(res.status).toBe(400);
     expect(res.body.error.message).toBe('Project is Already Archived');
@@ -114,17 +114,17 @@ describe('PATCH /api/projects/:id/archive', () => {
     const res = await request(app)
       .patch(`/api/projects/${projectId}/archive`)
       .set('Cookie', adminCookie)
-      .send({ bool: false });
+      .send({ archived: false });
 
     expect(res.status).toBe(400);
     expect(res.body.error.message).toBe('Project is Already Unarchived');
   });
 
-  it('5. Should return 400 if bool is missing or invalid type', async () => {
+  it('5. Should return 400 if arhived is missing or invalid type', async () => {
     const res = await request(app)
       .patch(`/api/projects/${projectId}/archive`)
       .set('Cookie', adminCookie)
-      .send({ bool: 'yes' }); // Sending a string instead of a boolean
+      .send({ archived: 'yes' }); // Sending a string instead of a boolean
 
     expect(res.status).toBe(400);
     expect(res.body.error.message).toBe('A Boolean Value is Required');
@@ -134,7 +134,7 @@ describe('PATCH /api/projects/:id/archive', () => {
     const res = await request(app)
       .patch(`/api/projects/${projectId}/archive`)
       .set('Cookie', memberCookie)
-      .send({ bool: true });
+      .send({ archived: true });
 
     expect(res.status).toBe(403);
   });
