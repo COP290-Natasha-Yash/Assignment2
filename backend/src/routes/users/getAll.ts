@@ -14,6 +14,7 @@ router.get('/', requireGlobalAdmin, async (req: Request, res: Response) => {
       select: {
         id: true,
         name: true,
+        username: true,
         email: true,
         globalRole: true,
         avatar: true,

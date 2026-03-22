@@ -25,6 +25,7 @@ router.get(
               id: true,
               name: true,
               email: true,
+              username: true,
               avatar: true,
             },
           },
