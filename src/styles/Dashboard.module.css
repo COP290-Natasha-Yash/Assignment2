@@ -1,10 +1,41 @@
+/* =========================================
+   DASHBOARD MODULE CSS
+   Sections:
+   1. Layout
+   2. Sidebar
+   3. Topbar
+   4. Notifications
+   5. User Profile
+   6. Projects
+   7. Modals
+   8. Forms & Buttons
+   9. Tasks
+   10. Toast
+   11. Animations
+========================================= */
+
+
+/* =========================================
+   1. LAYOUT
+========================================= */
+
 .dashboardLayout {
   display: flex;
   height: 100vh;
   background: linear-gradient(135deg, #eef2ff, #f8fafc);
 }
 
-/* Sidebar */
+.mainArea {
+  flex: 1;
+  padding: 30px;
+  background: linear-gradient(135deg, #c2ccee, #f8fafc);
+  font-family: "Poppins", sans-serif;
+}
+
+
+/* =========================================
+   2. SIDEBAR
+========================================= */
 
 .sidebar {
   width: 180px;
@@ -29,17 +60,10 @@
   cursor: pointer;
 }
 
-/* Main area */
 
-.mainArea {
-  flex: 1;
-  padding: 30px;
-  background: linear-gradient(135deg, #c2ccee, #f8fafc);
-  font-family:"Poppins" sans-serif;
-  
-}
-
-/* Topbar */
+/* =========================================
+   3. TOPBAR
+========================================= */
 
 .topbar {
   display: flex;
@@ -48,25 +72,159 @@
   margin-bottom: 40px;
 }
 
-.welcome {
-  font-size: 20px;
-  font-weight: 600;
+.dashboardTitle {
+  font-family: "Poppins", sans-serif;
+  font-size: 34px;
+  font-weight: 700;
+  color: #1e293b;
+  letter-spacing: 1px;
 }
 
 .topIcons {
   display: flex;
   align-items: center;
-  gap: 20px;
+  gap: 24px;
 }
 
-.notification {
-  font-size: 22px;
+
+/* =========================================
+   4. NOTIFICATIONS
+========================================= */
+
+/* Bell button wrapper â€” needed for absolute positioning of dropdown */
+.notifWrapper {
+  position: relative;
+}
+
+.notifBtn {
+  background: none;
+  border: none;
+  font-size: 1.3rem;
   cursor: pointer;
+  position: relative;
 }
 
+/* Red badge showing unread count */
+.notifBadge {
+  position: absolute;
+  top: -6px;
+  right: -6px;
+  background: red;
+  color: white;
+  border-radius: 50%;
+  font-size: 0.7rem;
+  width: 18px;
+  height: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Dropdown panel */
+.notifDropdown {
+  position: absolute;
+  right: 0;
+  top: 110%;
+  width: 280px;
+  background: white;
+  border: 1px solid #eee;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  z-index: 100;
+  padding: 10px;
+}
+
+/* Filter dropdown inside notifications panel */
+.notifFilter {
+  width: 100%;
+  margin-bottom: 8px;
+  padding: 4px;
+  border-radius: 4px;
+  border: 1px solid #ddd;
+}
+
+/* Single notification row */
+.notifItem {
+  padding: 8px;
+  border-bottom: 1px solid #f0f0f0;
+  font-size: 0.85rem;
+  color: #374151;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.notifItem:last-child {
+  border-bottom: none;
+}
+
+/* Unread notification highlight */
+.unread {
+  font-weight: 600;
+  background: #f0f4ff;
+  border-radius: 4px;
+}
+
+/* Empty state message */
+.noNotif {
+  text-align: center;
+  color: #999;
+  font-size: 0.85rem;
+}
+
+.notifList {
+  max-height: 260px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+}
+
+.notifList::-webkit-scrollbar { width: 4px; }
+.notifList::-webkit-scrollbar-thumb { background: #e2e8f0; border-radius: 2px; }
+
+
+/* =========================================
+   5. USER PROFILE
+========================================= */
+
+.userSection {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.userInfo {
+  display: flex;
+  flex-direction: column;
+  text-align: right;
+  font-family: "Inter", system-ui, sans-serif;
+  max-width: 150px;
+  overflow: hidden;
+}
+
+.userName {
+  font-weight: 600;
+  font-size: 15px;
+  color: #1a1a1a;
+  line-height: 1.2;
+  text-transform: capitalize;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.userRole {
+  font-size: 12px;
+  color: #6b7280;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  font-weight: 500;
+  margin-top: 2px;
+}
+
+/* Circular profile icon / avatar */
 .profile {
-  width: 38px;
-  height: 38px;
+  width: 42px;
+  height: 42px;
   border-radius: 50%;
   background: #6366f1;
   display: flex;
@@ -74,23 +232,36 @@
   justify-content: center;
   color: whitesmoke;
   font-weight: 600;
+  font-size: 18px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  overflow: hidden;
+  cursor: pointer;
 }
 
-/* Projects section */
+/* Avatar image inside profile circle */
+.avatarImage {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  pointer-events: none; /* Prevents image from blocking click on parent */
+}
+
+
+/* =========================================
+   6. PROJECTS
+========================================= */
 
 .header {
   display: flex;
   justify-content: space-between;
+  align-items: center;
   margin-bottom: 20px;
 }
 
-.createButton {
-  padding: 8px 16px;
-  background: #667eea;
-  border: none;
-  color: white;
-  border-radius: 6px;
-  cursor: pointer;
+.projectsTitle {
+  font-size: 22px;
+  font-weight: 700;
+  color: #1e293b;
 }
 
 .projectGrid {
@@ -100,70 +271,382 @@
 }
 
 .projectCard {
-  background: white;
+  background: rgb(227, 216, 216);
   padding: 20px;
   border-radius: 10px;
-  box-shadow: 0px 6px 15px rgba(0,0,0,0.1);
+  box-shadow: 0px 6px 15px rgba(0, 0, 0, 0.1);
   cursor: pointer;
+  transition: all 0.3s ease;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  min-width: 0;
+}
+
+/* Clamp description to 4 lines */
+.projectCard p {
+  line-clamp: 4;
+  display: -webkit-box;
+  -webkit-line-clamp: 4;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  overflow-wrap: anywhere;
+  word-break: normal;
+}
+
+.projectCard:hover {
+  transform: translateY(-6px);
+  box-shadow: 0px 10px 25px rgba(0, 0, 0, 0.15);
 }
 
 .projectTitle {
   font-family: "Roboto", sans-serif;
   font-size: 25px;
   font-weight: 600;
-  color : #334155;
+  color: #334155;
+  margin-bottom: 10px;
 }
-.dashboardTitle {
-  font-family: "Poppins", sans-serif;
-  font-size: 34px;
-  font-weight: 700;
-  color: #1e293b;
-  letter-spacing: 1px;
+
+/* Edit / Archive buttons on project card */
+.projectActions {
+  display: flex;
+  gap: 10px;
+  margin-top: 15px;
 }
-.notification {
-  position: relative;
-  font-size: 22px;
+
+.actionBtn {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  padding: 6px 10px;
+  background: #f3f4f6;
+  border: 1px solid #e5e7eb;
+  border-radius: 4px;
+  font-size: 12px;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.actionBtn:hover {
+  background: #e5e7eb;
+}
+
+/* Filter dropdown (Active / Archived / All) */
+.filterDropdown {
+  padding: 8px 12px;
+  border-radius: 6px;
+  border: 1px solid #d1d5db;
+  background-color: white;
+  font-size: 14px;
   cursor: pointer;
 }
 
-.badge {
-  position: absolute;
-  top: -6px;
-  right: -8px;
-  background: red;
-  color: white;
-  font-size: 10px;
-  padding: 2px 6px;
-  border-radius: 50%;
-}
-.projectCard {
-  background: rgb(227, 216, 216);
-  padding: 20px;
-  border-radius: 10px;
-  box-shadow: 0px 6px 15px rgba(0,0,0,0.1);
-  cursor: pointer;
-  transition: all 0.3s ease;
-}
 
-.projectCard:hover {
-  transform: translateY(-6px);
-  box-shadow: 0px 10px 25px rgba(0,0,0,0.15);
-}
+/* =========================================
+   7. MODALS
+========================================= */
+
+/* Dark backdrop behind modal */
 .modalOverlay {
- position: fixed;
- top: 0;
- left: 0;
- width: 100%;
- height: 100%;
- background: rgba(0,0,0,0.5);
- display: flex;
- align-items: center;
- justify-content: center;
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background-color: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 9999;
+  backdrop-filter: blur(2px);
 }
 
-.modal {
- background: white;
- padding: 30px;
- border-radius: 10px;
- width: 350px;
+.modalContent {
+  background-color: white;
+  width: 400px;
+  border-radius: 12px;
+  padding: 30px;
+  position: relative;
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+  text-align: center;
+}
+
+/* X button in top-right corner */
+.closeModalBtn {
+  position: absolute;
+  top: 15px;
+  right: 15px;
+  background: none;
+  border: none;
+  font-size: 18px;
+  cursor: pointer;
+  color: #6b7280;
+}
+
+.closeModalBtn:hover {
+  color: #111827;
+}
+
+.modalBody {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+}
+
+/* Large avatar shown in profile modal */
+.modalAvatarLarge {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  background-color: #4f46e5;
+  color: white;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-size: 32px;
+  font-weight: bold;
+  margin-bottom: 10px;
+  overflow: hidden;
+}
+
+.modalAvatarLarge img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/* Search bar (used in Users modal) */
+.searchInput {
+  width: 100%;
+  padding: 8px 12px;
+  border-radius: 6px;
+  border: 1px solid #ddd;
+  margin-bottom: 12px;
+  font-size: 0.9rem;
+  box-sizing: border-box;
+}
+
+/* Scrollable list (used in Users and Tasks modals) */
+.usersList {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  height: 400px;
+  overflow-y: scroll;
+}
+
+/* Single user row in Users modal */
+.userListItem {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.userListItem:hover {
+  background: #f0f4ff;
+}
+
+/* Small circular avatar in user list */
+.userListAvatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  background: #6366f1;
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: bold;
+  overflow: hidden;
+  flex-shrink: 0;
+}
+
+.userListAvatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+
+/* =========================================
+   8. FORMS & BUTTONS
+========================================= */
+
+.createButton {
+  padding: 8px 16px;
+  background: #667eea;
+  border: none;
+  color: white;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: 600;
+}
+
+.modalActions {
+  display: flex;
+  width: 100%;
+  gap: 10px;
+  margin-top: 10px;
+}
+
+.saveBtn {
+  background-color: #4f46e5;
+  color: white;
+  flex: 1;
+  padding: 10px;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: 600;
+}
+
+.saveBtn:hover {
+  background-color: #4338ca;
+}
+
+.logoutBtn {
+  background-color: #fee2e2;
+  color: #ef4444;
+  flex: 1;
+  padding: 10px;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: 600;
+}
+
+.logoutBtn:hover {
+  background-color: #fecaca;
+}
+
+.cancelBtn {
+  background-color: #f3f4f6;
+  color: #374151;
+  flex: 1;
+  padding: 10px;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-weight: 600;
+}
+
+.cancelBtn:hover {
+  background-color: #e5e7eb;
+}
+
+.inputGroup {
+  display: flex;
+  flex-direction: column;
+  margin-bottom: 12px;
+  text-align: left;
+  width: 100%;
+}
+
+.inputGroup label {
+  font-size: 12px;
+  font-weight: 600;
+  margin-bottom: 4px;
+  color: #374151;
+}
+
+.inputGroup input {
+  padding: 10px;
+  border: 1px solid #d1d5db;
+  border-radius: 4px;
+  font-size: 14px;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+/* Resizable textarea for descriptions */
+.modalTextarea {
+  padding: 10px;
+  border: 1px solid #d1d5db;
+  border-radius: 4px;
+  font-size: 14px;
+  width: 100%;
+  box-sizing: border-box;
+  min-height: 100px;
+  font-family: inherit;
+  resize: vertical;
+}
+
+
+/* =========================================
+   9. TASKS
+========================================= */
+
+/* Single task row in Tasks modal */
+.taskItem {
+  padding: 10px;
+  border-bottom: 1px solid #f0f0f0;
+  border-radius: 6px;
+  margin-bottom: 4px;
+}
+
+.taskName {
+  font-weight: 600;
+  font-size: 0.9rem;
+}
+
+/* Project name shown below task title */
+.taskProject {
+  font-size: 0.8rem;
+  color: #6366f1;
+  margin-top: 2px;
+}
+
+/* Column name shown as task status */
+.taskStatus {
+  font-size: 0.75rem;
+  color: #999;
+  margin-top: 2px;
+}
+
+
+/* =========================================
+   10. TOAST NOTIFICATIONS
+========================================= */
+
+.toast {
+  position: fixed;
+  bottom: 24px;
+  right: 24px;
+  padding: 12px 20px;
+  border-radius: 8px;
+  color: white;
+  font-size: 0.9rem;
+  font-weight: 500;
+  z-index: 9999;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  animation: slideIn 0.3s ease;
+}
+
+.toastSuccess {
+  background: #22c55e;
+}
+
+.toastError {
+  background: #ef4444;
+}
+
+
+/* =========================================
+   11. ANIMATIONS
+========================================= */
+
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }

@@ -11,7 +11,7 @@
   padding: 40px;
   width: 360px;
   border-radius: 12px;
-  box-shadow: 0px 10px 30px rgba(0,0,0,0.2);
+  box-shadow: 0px 10px 30px rgba(0, 0, 0, 0.2);
 }
 
 .registerTitle {
@@ -68,4 +68,15 @@
 
 .loginLink a:hover {
   text-decoration: underline;
+}
+
+.errorBox {
+  background-color: #fee2e2;
+  color: #b91c1c;
+  padding: 10px;
+  border-radius: 4px;
+  margin-bottom: 15px;
+  font-size: 14px;
+  text-align: center;
+  border: 1px solid #fca5a5;
 }

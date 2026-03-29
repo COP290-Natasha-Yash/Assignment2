@@ -87,3 +87,14 @@
 .forgotPassword a:hover {
   text-decoration: underline;
 }
+
+.errorBox {
+  background-color: #fee2e2;
+  color: #b91c1c;
+  padding: 10px;
+  border-radius: 4px;
+  margin-bottom: 15px;
+  font-size: 14px;
+  text-align: center;
+  border: 1px solid #fca5a5;
+}
